@@ -1,25 +1,22 @@
-# KILL IT WITH FIRE
+# Comparing and Classifying Pop Music from Different Countries
 
 *Team members: Matthew Staib, Lennart Jansson, Edward Dai*
 
-<!--PROBLEM: what exactly do we mean by "popular music" here? all popular-ish genres
-from the particular country? or just top 40 stuff?-->
-
 ## The Big Idea
 
-We plan to use machine learning to distinguish modern popular music from
+We plan to use machine learning to distinguish modern pop music from
 different countries. For example, is it possible to distinguish K-pop from
-Canto-pop, Mando-pop, J-pop, or T-pop?  If this is unsuccessful, we will broaden
-the set of countries whose popular music we compare.
+Canto-pop, Mando-pop, J-pop, or T-pop? If necessary, we will broaden
+the set of countries whose pop music we compare.
 
 We think this is worthwhile and interesting for two primary reasons:
 
 1. we can build upon a large amount of work on auto-tagging by trying to improve
 one particular aspect (country of origin)
-  
+ 
 2. presuming we trust our software, we can get a numerical sense for how similar
-or different popular music is. (for example, is K-pop quantitatively more like
-    American popular music than J-pop is?)
+or different pop music is. (for example, is K-pop quantitatively more like
+  American pop music than J-pop is?)
 
 ### Some ideas we have/how we plan to do this
 
@@ -37,7 +34,7 @@ cepstrum) inspired from the paper and if those do not prove fruitful, we will
 experiment further.
 
 We think it'd be most interesting to try unsupervised learning, especially on
-countries whose popular music may seem especially similar to the average
+countries whose pop music may seem especially similar to the average
 American. *k*-means seems like a good idea. We've also heard things about
 convolutional neural nets, so maybe we'll try some of those?
 
