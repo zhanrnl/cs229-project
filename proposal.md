@@ -35,8 +35,13 @@ experiment further.
 
 We think it'd be most interesting to try unsupervised learning, especially on
 countries whose pop music may seem especially similar to the average
-American. *k*-means seems like a good idea. We've also heard things about
-convolutional neural nets, so maybe we'll try some of those?
+American. It would be especially interesting if, for example, pop music from 
+Western Europe clustered together, and pop music from Eastern Europe was a 
+separate cluster. By allowing the algorithm to formulate patterns and classes
+for itself, we may see some quantitative similarities between genres that in
+the past have only been studied qualitiatively. *k*-means seems like a good
+first attempt. We've also heard things about convolutional neural nets, so maybe
+we'll try some of those?
 
 If unsupervised learning is not fruitful even after we try to compare things
 like Swedish and Indian music (which we presume to be very different), we might
