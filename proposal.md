@@ -14,7 +14,7 @@ We think this is worthwhile and interesting for two primary reasons:
 improve one particular aspect (country of origin)
  
 2. presuming we trust our software, we can get a numerical sense for how similar
-or different pop music is. (for example, is K-pop quantitatively more like
+or different pop music is (for example, is K-pop quantitatively more like
   American pop music than J-pop is?)
 
 ### Some ideas we have/how we plan to do this
