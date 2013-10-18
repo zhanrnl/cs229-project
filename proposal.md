@@ -29,7 +29,7 @@ found the following two papers:
 - http://ismir2012.ismir.net/event/papers/553-ismir-2012.pdf
 
 We'll start with some features (such as things related to the Mel-frequency
-cepstrum) inspired from the paper and if those do not prove fruitful, we will
+cepstrum) inspired from the papers and if those do not prove fruitful, we will
 experiment further.
 
 We think it'd be most interesting to try unsupervised learning, especially on
@@ -39,7 +39,7 @@ Western Europe clustered together, and pop music from Eastern Europe was a
 separate cluster. By allowing the algorithm to formulate patterns and classes
 for itself, we may see some quantitative similarities between genres that in
 the past have only been studied qualitiatively. Algorithmically, *k*-means seems
-like a good first attempt. We've also heard things about convolutional neural
+like a good first start. We've also heard things about convolutional neural
 nets, so maybe we'll try some of those?
 
 If unsupervised learning is not fruitful even after we try to compare things
