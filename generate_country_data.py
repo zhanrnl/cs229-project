@@ -1,10 +1,11 @@
-from collections import defaultdict
-import os
 import numpy as np
 from math import *
 from sklearn.neighbors import BallTree
+import cPickle
+import os
+import hdf5_getters
 
-base_dir = '/media/C_DRIVE/Users/matt/Documents/allCountries/'
+base_dir = '../data/'
 file_name = base_dir + 'allCountries.txt'
 compact_file_name = base_dir + 'allCountriesCompact.txt'
 sorted_coord_tuples_file = base_dir + 'sorted_coord_tuples.txt'
@@ -70,19 +71,6 @@ def lat_long_to_3d(lat, lon):
 
     return [x, y, z]
     
-#def coords_to_lat_long(coords):
-#    [x, y, z] = coords
-#                    
-#    lat = asin(z)
-#    cos_lng = x / cos(lat)
-#    sin_lng = y / cos(lat)
-#    
-#    lng = acos(cos_lng)
-#    if sin_lng < 0:
-#        lng = -lng
-#        
-#    return lat * 180 / pi, lng * 180 / pi
-
 def build_BallTree():
     ''' Builds a scikit BallTree object from the latitudes and longitudes
     (and equivalent Cartesian points) in the compact file, so that we may 
@@ -145,7 +133,56 @@ def bulk_lookup_loc(lat_lng_key_tuples_list, ball_tree, array_of_points):
     coord_key_tuples_list = [elem_to_result(x) for x in lat_lng_key_tuples_list]
     
     return get_countries_from_coords(coord_key_tuples_list)
+
+def get_all_filepaths(indir):
+    ''' Given a directory, return all .h5 files in this directory and its
+    subdirectories '''
+    files = []
+
+    for root, dirs, filenames in os.walk(indir):
+        for f in filenames:
+            if os.path.splitext(f)[1] == '.h5':
+                files.append(os.path.join(root, f))
+
+    return files
+
+def save_filenames_and_artists():
+    ''' Iterates through all files in the dataset and saves lists of tuples
+    that look like (lat, lng, filename) and (lat, lng, artist_name) '''
+    files = get_all_filepaths(base_dir + 'MillionSongSubset/')
+    
+    filename_list = []
+    artist_list = [] 
+
+    for f in files:
+        h5 = hdf5_getters.open_h5_file_read(f)
         
+        artist_name = hdf5_getters.get_artist_name(h5)
+        lat = hdf5_getters.get_artist_latitude(h5)
+        lng = hdf5_getters.get_artist_longitude(h5)
+
+        h5.close()
+
+        if not isnan(lat):
+            filename_list.append((lat, lng, f))
+            artist_list.append((lat, lng, artist_name))
+
+    cPickle.dump(filename_list, open(base_dir + 'filename_list', 'wb'))
+    cPickle.dump(artist_list, open(base_dir + 'artist_list', 'wb'))
+
+def save_filename_to_country_dict(ball_tree, array_of_points):
+    ''' Saves a dictionary of Filename => Country code '''
+    filename_list = cPickle.load(open(base_dir + 'filename_list', 'rb'))
+    
+    filename_country_list = bulk_lookup_loc(filename_list, ball_tree, array_of_points)
+
+    filename_country_dict = {}
+    for (k, v) in filename_country_list:
+        filename_country_dict[k] = v
+    
+    cPickle.dump(filename_country_dict, open(base_dir + 'filename_country_dict', 'wb'))
+    return filename_country_dict
+
 def benchmark(n, ball_tree, array_of_points):
     import random
     import time
@@ -170,6 +207,17 @@ def benchmark(n, ball_tree, array_of_points):
     print 'Percentage where we got an actual country (not None): {0}%'.format(pnn)
     
 if __name__ == '__main__':
-    #build_coords_file()
+    print 'Starting to save filenames and artists'
+    save_filenames_and_artists()
+    print 'Done saving filenames and artists'
+    
+    # build_compact_file()
+    # build_coords_file()
+    print 'Building BallTree'
     array_of_points, ball_tree = build_BallTree()
-    benchmark(10, ball_tree, array_of_points)
+    print 'Done building BallTree'
+    # benchmark(10, ball_tree, array_of_points)
+
+    print 'Saving filename => country code dictionary'
+    save_filename_to_country_dict(ball_tree, array_of_points)
+    print 'Done with all tasks. Exiting...'
