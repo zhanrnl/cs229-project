@@ -1,4 +1,5 @@
 def k_est(s):
+    ''' estimate length of LZ78 compression '''
     d = set()
     w = ''
     Kest = 0
@@ -16,16 +17,10 @@ def k_est(s):
 
     return Kest
 
-def k_concat(x, y):
-    return float(k_est(x + y) + k_est(y + x)) / 2
+def ncd(x, y):
+    ''' "Normalized Compression Distance" -- see homepages.cwi.nl/~paulv/papers/cluster.pdf '''
+    c_x = k_est(x)
+    c_y = k_est(y)
+    c_xy = (k_est(x + y) + k_est(y + x)) * 0.5
 
-def k_cond(x, y):
-    return k_concat(x, y) - k_est(y)
-
-def metric_d1(x, y):
-    assert(len(x) > 0 or len(y) > 0)
-    return float(k_cond(x, y) + k_cond(y, x)) / k_concat(x, y)
-
-def metric_d2(x, y):
-    assert(len(x) > 0 or len(y) > 0)
-    return float(max(k_cond(x, y), k_cond(y, x))) / max(k_est(x), k_est(y))
+    return (c_xy - min(c_x, c_y)) / max(c_x, c_y)
