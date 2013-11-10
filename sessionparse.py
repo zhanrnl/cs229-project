@@ -1,6 +1,6 @@
-import pickle
 import csv
-from music21 import *
+from fractions import *
+from pyparsing import *
 
 meter_dict = {
   'jig': '6/8',
@@ -16,38 +16,180 @@ meter_dict = {
   'mazurka': '3/4'
   }
 
-def parse_abc(abcobj):
-  """
-  Given a row of the csv file, parses into a music21 stream
-  """
-  abcstr = "T: {} ({})\nM: {}\nL: 1/8\nK: {}\n{}".format(abcobj['name'],
-      abcobj['type'], meter_dict[abcobj['type']], abcobj['mode'],
-      abcobj['abc'])
-  return converter.parseData(abcstr, None, 'abc')
+class StrForRepr:
+  def __repr__(self):
+    return str(self)
+
+class Note(StrForRepr):
+  def __init__(self, pitch, dur):
+    self.pitch = pitch
+    self.dur = dur
+  def __str__(self):
+    dur_integral = self.dur.denominator == 1
+    if self.dur == 1:
+      dur_str = ''
+    elif dur_integral:
+      dur_str = self.dur.numerator
+    else:
+      dur_str = "{}/{}".format(self.dur.numerator, self.dur.denominator)
+    return "{}{}".format(self.pitch, dur_str)
+
+class Bar(StrForRepr):
+  def __init__(self, notes, start_repeat, end_repeat, which_ending):
+    self.notes = list(notes)
+    self.start_repeat = start_repeat
+    self.end_repeat = end_repeat
+    self.which_ending = which_ending
+  def __str__(self):
+    return "Bar[ {}{}{}{} ]".format(
+        '<start repeat> ' if self.start_repeat else '',
+        '<{} ending> '.format(self.which_ending) if \
+          (self.which_ending is not None) else '',
+        ' '.join(map(str, self.notes)),
+        ' <end repeat>' if self.end_repeat else '',
+        )
+
+#-------------------------------------------------------------------------------
+
+def hide_action(ts):
+  return []
+
+"""
+Pitch handling is not precisely correct, especially with regards to accidentals
+continuing to be in effect throughout a bar
+"""
+pitchLetters = map(chr, range(ord('A'), ord('G')+1))
+pitchLetters.append('Z')
+def pitch_action(ts):
+  return [''.join(ts)]
+accidentalP = Literal('^') | Literal('=')
+pitchP = (
+    Optional(accidentalP) + 
+    oneOf(pitchLetters + map(lambda c: c.lower(), pitchLetters)) +
+    Optional(',')
+    ).setParseAction(pitch_action)
+
+intP = Word(nums)
+def dur_action(ts):
+  if ts[0] == '/':
+    return [Fraction(1, 2 if len(ts) < 2 else int(ts[1]))]
+  elif len(ts) >= 3 and ts[1] == '/':
+    return [Fraction(int(ts[0]), int(ts[2]))]
+  else:
+    return [Fraction(int(ts[0]))]
+durationP = (
+    intP + Literal('/') + intP |
+    Literal('/') + intP |
+    intP + Literal('/') |
+    Literal('/') |
+    intP
+    ).setParseAction(dur_action)
+
+"""
+Currently ignores ties ('-')
+"""
+def note_action(ts):
+  p = ts[0]
+  d = Fraction(1) if len(ts) < 2 else ts[1]
+  return Note(p, d)
+noteP = (
+    Optional(Literal('~')).setParseAction(hide_action) +
+    pitchP +
+    Optional(durationP) +
+    Optional(Literal('-')).setParseAction(hide_action)
+    ).setParseAction(note_action)
+
+def triplet_action(ts):
+  def tripletify(note):
+    note.dur = note.dur * Fraction(2,3)
+    return note
+  return map(tripletify, ts)
+tripletP = (
+    (
+      Literal('(3').setParseAction(hide_action) +
+      noteP + noteP + noteP
+    ) | (
+      Literal('((3').setParseAction(hide_action) +
+      noteP + noteP + noteP +
+      Literal(')').setParseAction(hide_action)
+    )
+    ).setParseAction(triplet_action)
+
+def dotted_action(ts):
+  if ts[1] == '>':
+    return [Note(ts[0], Fraction(3,2)), Note(ts[2], Fraction(1,2))]
+  else:
+    return [Note(ts[0], Fraction(1,2)), Note(ts[2], Fraction(3,2))]
+dottedP = (
+    pitchP + (
+      Literal('>') | Literal('<')
+    ) + pitchP
+    ).setParseAction(dotted_action)
+
+"""
+Ignore groups of grace notes and chord symbols
+"""
+chordSymbolP = Literal('"') + Word(alphas) + Literal('"')
+gracesP = Literal('{') + OneOrMore(noteP) + Literal('}')
+def bar_action(ts):
+  start_repeat = False
+  if ts[0] == '|:':
+    start_repeat = True
+    ts = ts[1:]
+  end_repeat = ts[-1] == ':|'
+  which_ending = ts[0] if type(ts[0]) is int else None
+  return Bar(ts[:-1], start_repeat, end_repeat, which_ending)
+"""
+TODO: handle chords reasonably, like pick the top note or first note or
+something. Currently the parsing fails. I don't think we really need the
+information to be handled fully faithfully
+"""
+barP = (
+    Optional(Literal('|:') | Literal('|').setParseAction(hide_action)) +
+    Optional(oneOf('1 2').setParseAction(lambda s: [int(s[0])])) +
+    OneOrMore(
+      tripletP |
+      dottedP |
+      noteP |
+      gracesP.setParseAction(hide_action) |
+      chordSymbolP.setParseAction(hide_action)
+    ) +
+    ( 
+      Literal(':|') |
+      Literal('||') |
+      Literal('|]') |
+      Literal('|')
+    )
+    ).setParseAction(bar_action)
+
+keychangeP = (Literal('K:') + pitchP).setParseAction(hide_action)
+
+tuneP = OneOrMore(keychangeP | barP)
+
+def parse_abc(tune):
+  abc = tune['abc']
+  abc = abc.replace('\\', '')
+  return tuneP.parseString(abc)
 
 def parse_all_csv(n=None):
-  """
-  Reads all rows of the csv and as an iterator yields each parsed tune music21
-  stream. The parsed streams can be serialized with converter.freezeStr, but
-  this creates hideously huge binary blobs (hundreds KB each), so we should
-  just do processing on each tune one by one instead of trying to serialize
-  parse results
-  """
   csv.register_dialect('thesession', quoting=csv.QUOTE_MINIMAL,
       doublequote=False, escapechar='\\')
   with open('thesession-data/tunes.csv', 'r') as csvfile:
     all_tunes = list(csv.DictReader(csvfile, dialect='thesession'))
 
-  for tune in (all_tunes if n is None else all_tunes[:n]):
+  successful = 0
+  failed = 0
+  for i, tune in enumerate((all_tunes if n is None else all_tunes[:n])):
     try:
-      tune['score'] = parse_abc(tune)
-      yield tune
+      tune['parsed'] = list(parse_abc(tune))
+      successful += 1
     except:
-      pass
+      #print 'Parse error on tune', i
+      #print tune
+      failed += 1
+  print successful, 'tunes parsed successfully,', failed, 'failed'
+
+  return all_tunes if n is None else all_tunes[:n]
 
 if __name__ == '__main__':
-  # silly example
-  for tune in parse_all_csv(20):
-    pass
-    #print tune
-    #tune['score'].show()
+  tunes = parse_all_csv(200)
