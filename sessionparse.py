@@ -1,5 +1,6 @@
 import csv
 import re
+import pickle
 from fractions import *
 from pyparsing import *
 
@@ -208,6 +209,8 @@ def parse_all_csv(n=None):
   failed = 0
   print 'Starting parsing...'
   for i, tune in enumerate((all_tunes if n is None else all_tunes[:n])):
+    if i % 100 == 0:
+      print 'At tune', i, '...'
     try:
       tune['parsed'] = list(parse_abc(tune))
       successful += 1
@@ -222,4 +225,6 @@ def parse_all_csv(n=None):
   return all_tunes if n is None else all_tunes[:n]
 
 if __name__ == '__main__':
-  tunes = parse_all_csv(30)
+  tunes = parse_all_csv()
+  with open('thesession-data/parsed', 'w') as f:
+    pickle.dump(tunes, f)
