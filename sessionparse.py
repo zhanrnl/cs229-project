@@ -1,6 +1,9 @@
 import csv
+import re
 from fractions import *
 from pyparsing import *
+
+verbose = False
 
 meter_dict = {
   'jig': '6/8',
@@ -40,6 +43,8 @@ class Bar(StrForRepr):
     self.start_repeat = start_repeat
     self.end_repeat = end_repeat
     self.which_ending = which_ending
+  def __iter__(self):
+    return iter(self.notes)
   def __str__(self):
     return "Bar[ {}{}{}{} ]".format(
         '<start repeat> ' if self.start_repeat else '',
@@ -51,9 +56,6 @@ class Bar(StrForRepr):
 
 #-------------------------------------------------------------------------------
 
-def hide_action(ts):
-  return []
-
 """
 Pitch handling is not precisely correct, especially with regards to accidentals
 continuing to be in effect throughout a bar
@@ -62,11 +64,12 @@ pitchLetters = map(chr, range(ord('A'), ord('G')+1))
 pitchLetters.append('Z')
 def pitch_action(ts):
   return [''.join(ts)]
-accidentalP = Literal('^') | Literal('=')
+accidentalP = oneOf('^ = _')
 pitchP = (
     Optional(accidentalP) + 
+    Suppress(Optional(Literal('~'))) +
     oneOf(pitchLetters + map(lambda c: c.lower(), pitchLetters)) +
-    Optional(',')
+    Optional(Literal(',') | Literal("'"))
     ).setParseAction(pitch_action)
 
 intP = Word(nums)
@@ -93,10 +96,14 @@ def note_action(ts):
   d = Fraction(1) if len(ts) < 2 else ts[1]
   return Note(p, d)
 noteP = (
-    Optional(Literal('~')).setParseAction(hide_action) +
+    Suppress(Optional(
+      Literal('~') |
+      Literal('.') |
+      Literal('T')
+      )) +
     pitchP +
     Optional(durationP) +
-    Optional(Literal('-')).setParseAction(hide_action)
+    Suppress(Optional(Literal('-')))
     ).setParseAction(note_action)
 
 def triplet_action(ts):
@@ -104,16 +111,15 @@ def triplet_action(ts):
     note.dur = note.dur * Fraction(2,3)
     return note
   return map(tripletify, ts)
-tripletP = (
+tripletP = Suppress(
     (
-      Literal('(3').setParseAction(hide_action) +
+      Literal('(3') +
       noteP + noteP + noteP
     ) | (
-      Literal('((3').setParseAction(hide_action) +
+      Literal('((3') +
       noteP + noteP + noteP +
-      Literal(')').setParseAction(hide_action)
-    )
-    ).setParseAction(triplet_action)
+      Literal(')')
+    ))
 
 def dotted_action(ts):
   if ts[1] == '>':
@@ -121,10 +127,20 @@ def dotted_action(ts):
   else:
     return [Note(ts[0], Fraction(1,2)), Note(ts[2], Fraction(3,2))]
 dottedP = (
-    pitchP + (
+    noteP + (
       Literal('>') | Literal('<')
-    ) + pitchP
+    ) +
+    noteP# +
+    #Suppress(Optional('3'))
     ).setParseAction(dotted_action)
+
+def chord_action(ts):
+  return ts[0]
+chordP = (
+    Suppress(Literal('[')) +
+    OneOrMore(noteP) +
+    Suppress(Literal(']'))
+    ).setParseAction(chord_action)
 
 """
 Ignore groups of grace notes and chord symbols
@@ -137,7 +153,11 @@ def bar_action(ts):
     start_repeat = True
     ts = ts[1:]
   end_repeat = ts[-1] == ':|'
-  which_ending = ts[0] if type(ts[0]) is int else None
+  if type(ts[0]) is int:
+    which_ending = ts[0]
+    ts = ts[1:]
+  else:
+    which_ending = None
   return Bar(ts[:-1], start_repeat, end_repeat, which_ending)
 """
 TODO: handle chords reasonably, like pick the top note or first note or
@@ -145,30 +165,37 @@ something. Currently the parsing fails. I don't think we really need the
 information to be handled fully faithfully
 """
 barP = (
-    Optional(Literal('|:') | Literal('|').setParseAction(hide_action)) +
-    Optional(oneOf('1 2').setParseAction(lambda s: [int(s[0])])) +
+    Optional(Literal('|:') | Suppress(Literal('|'))) +
+    Optional(
+      Suppress(Optional('[')) + 
+      oneOf('1 2').setParseAction(lambda s: [int(s[0])])) +
     OneOrMore(
       tripletP |
       dottedP |
       noteP |
-      gracesP.setParseAction(hide_action) |
-      chordSymbolP.setParseAction(hide_action)
-    ) +
+      chordP |
+      Suppress(gracesP) |
+      Suppress(chordSymbolP) |
+      Suppress('(') |
+      Suppress(')')) +
     ( 
+      Literal(':||') |
       Literal(':|') |
+      Literal('|:') |
       Literal('||') |
       Literal('|]') |
-      Literal('|')
-    )
+      Literal('|'))
     ).setParseAction(bar_action)
 
-keychangeP = (Literal('K:') + pitchP).setParseAction(hide_action)
-
-tuneP = OneOrMore(keychangeP | barP)
+tuneP = OneOrMore(barP) + StringEnd()
 
 def parse_abc(tune):
   abc = tune['abc']
   abc = abc.replace('\\', '')
+  abc = abc.replace(':||:', ':| |:')
+  abc = re.sub(r'![\w]+!', '', abc)
+  abc = abc.replace('!', '')
+  abc = re.sub(r'K:[\w ]+\s*', '', abc, 0, re.MULTILINE)
   return tuneP.parseString(abc)
 
 def parse_all_csv(n=None):
@@ -179,17 +206,20 @@ def parse_all_csv(n=None):
 
   successful = 0
   failed = 0
+  print 'Starting parsing...'
   for i, tune in enumerate((all_tunes if n is None else all_tunes[:n])):
     try:
       tune['parsed'] = list(parse_abc(tune))
       successful += 1
-    except:
-      #print 'Parse error on tune', i
-      #print tune
+    except ParseException as e:
+      if verbose:
+        print 'Parse error on tune', i
+        print e
+        print tune['abc']
       failed += 1
   print successful, 'tunes parsed successfully,', failed, 'failed'
 
   return all_tunes if n is None else all_tunes[:n]
 
 if __name__ == '__main__':
-  tunes = parse_all_csv(200)
+  tunes = parse_all_csv(30)
