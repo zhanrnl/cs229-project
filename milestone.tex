@@ -1,33 +1,69 @@
-\documentclass[11pt]{article}
-
-\usepackage{fullpage}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{fancyhdr}
-\usepackage{enumerate}
-\usepackage{lastpage}
-
-\pagestyle{fancy}
-\fancyhf{}
-\lhead{CS 229 Project Milestone}
-\rhead{Page \thepage\ of \pageref{LastPage}}
-
-\thispagestyle{empty}
-
-\headheight = 17pt
-\renewcommand{\headrulewidth}{1pt}
-\parindent=0in
-\headsep = 20pt
-
-\begin{document} 
-\begin{center}
-	\textsc{\Large CS 229 Project Milestone} \\
-	\textsc{Lennart Jansson, Matt Staib, Edward Dai}
-\end{center}
-
-\subsection*{Introduction.}
+\documentclass{article} % For LaTeX2e
+\usepackage{nips13submit_e,times}
+\usepackage{hyperref}
+\usepackage{url}
+%\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
+\title{CS 229 Milestone}
 
-\end{document} 
+\author{Matthew Staib, Lennart Jansson, and Edward Dai}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+\maketitle
+
+\section{A short note about our topic}
+Originally, we were planning to classify popular music by country of origin
+using audio features. For example, we intended to cluster based on these
+features and hoped to observe clusters corresponding to geographic origin.
+However, after some reconsidering, we decided that this was infeasible since we
+expected similarity between songs to be more closely tied to genre and other
+factors instead of country of origin. We also had problems finding a large
+dataset where we would have been able to choose the audio features ourselves
+(e.g. The Million Song Dataset is quite vast and has audio features, but not the
+original audio).
+
+We still wanted to work on a project related to music and music analysis, but
+decided that it would be more feasible to consider a problem with a cleaner
+dataset. One of our group members had previously experimented with a dataset of
+folk dance music where melodies are stored in a commonly used score notation
+(abc notation).
+
+\section{Introduction}
+Most folk dance music contains two musical themes; the tune begins with one
+musical theme, progresses to another, and then repeats the first. The first
+section is typically called the $A$ section while the second is called the $B$
+section. Our goal is to understand at a quantitative level the relationship
+between $A$ sections and $B$ sections. In the long term, for example, we want to
+be able to, given an $A$ section, automatically generate a musically appropriate
+$B$ section.
+
+In working towards this goal, we need to understand both the relationship
+between the $A$ and $B$ section of a given folk song as well as the differences
+between $A$ and $B$ sections of such music in general. 
+
+\section{Dataset}
+
+%TODO: Maybe do something with citing?
+We are using the tunes dataset from The Session (\texttt{thesession.org}). The
+Session is an online community of people who are interested in Irish folk music.
+Available on their website is a set of roughly 20 thousand
+%TODO: Check names of tunes against each other
+%TODO: Check these numbers
+
+
+\end{document}
