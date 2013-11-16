@@ -130,4 +130,21 @@ if __name__ == '__main__':
     
     lin_clf = svm.LinearSVC()
     lin_clf.fit(f_train, t_train)
+    
+    t_predict = lin_clf.predict(f_test)
 
+    type_errors = np.zeros(11, dtype='int32')
+    type_nums = np.zeros(11, dtype='int32')
+
+    for i in range(len(t_test)):
+        type_nums[t_test[i]] += 1
+        if t_test[i] != t_predict[i]:
+            type_errors[t_test[i]] += 1
+
+    frac_total_error = sum(type_errors) / float(len(t_test))
+    frac_error = np.zeros(11)
+    for i in range(11):
+        frac_error[i] = type_errors[i] / float(type_nums[i])
+    
+    print frac_total_error
+    print frac_error
