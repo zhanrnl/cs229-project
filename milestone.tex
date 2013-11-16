@@ -47,7 +47,8 @@ folk dance music where melodies are stored in a commonly used score notation
 
 \section{Introduction}
 Most folk dance music contains two musical themes; the tune begins with one
-musical theme, progresses to another, and then repeats the first. The first
+musical theme which is usually repeated, then progresses to another theme with
+similar musical structure and motives, which is usually also repeated. The first
 section is typically called the $A$ section while the second is called the $B$
 section. Our goal is to understand, at a quantitative level, the relationship
 between $A$ sections and $B$ sections. In the long term, for example, we want to
@@ -94,8 +95,36 @@ d2fd c2ec|defg afge|afge fdec|BABc dAFD|
 first line, while the $B$ section spans the second and third line. The $A$ and
 $B$ sections are the same length since the first four bars are repeated.}
 \end{figure}
-\FloatBarrier
+%\FloatBarrier
 
+\section{Feature Extraction}
+
+We first use an ABC parser to turn the tunes in ABC notation into manipulable
+datatypes of bars and notes. For feature extraction, we count frequencies of
+$n$-grams of note pitches up to $n=3$, which gives information about the
+characteristic pitch contours of the individual tunes.
+
+We are not currently using rhythm information of notes, nor are we considering
+the particular octave or accidental inflection of pitches. This is a very basic
+feature extraction scheme and we hope to extend our feature extraction soon to
+include this other information, which may be useful in improving accuracy of our
+classifiers.
+
+For our work with $A$ and $B$ section classification and matching, we use a
+simple heuristic to split tunes into $A$ and $B$ sections as they are not
+explicitly labelled in the data set. We first unfold all symbolic repeats in the
+original tune, taking into consideration 1st and 2nd endings which very commonly
+appear at the end of both $A$ and $B$ sections. This produces continuous streams
+of music that are more easily analyzed, and reflect the structure of the tune as
+it sounds when performed, rather than how it appears in notation.
+
+Then, if the tune has a number of bars that is a multiple of 4, we split the
+tune evenly in half. This is an imprecise heuristic, but should work well in
+practice because $A$ and $B$ sections generally have the same number of bars as
+they most commonly have parallel musical structure, and also because these
+traditional tunes most commonly have 4-bar phrases within $A$ and $B$ sections.
+
+\section{Preliminary classification experiments}
 
 \end{document}
 %TODO: Check names of tunes against each other
