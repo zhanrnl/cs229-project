@@ -229,12 +229,23 @@ def parse_all_csv(tunes):
   #print successful, 'tunes parsed successfully,', failed, 'failed'
   return tunes.get()
 
+"""
+TODO: start working on breaking into A and B section
+"""
 if __name__ == '__main__':
-  tunes = load_csv()
-  tunes = parse_all_csv(tunes)
-  i = 0
-  while i <= len(tunes)/4000:
-    tune_slice = tunes[i*4000:(i+1)*4000]
-    with open('thesession-data/cpickled_parsed_{}'.format(i/4000), 'wb') as f:
-      cPickle.dump(tune_slice, f)
-    i += 1
+  pass
+
+"""
+This main function reads the csv file, parses all the tunes using 4 threads,
+and saves slices of 4000 tunes to pickle files. 
+"""
+#if __name__ == '__main__':
+  #tunes = load_csv()
+  #tunes = parse_all_csv(tunes)
+  #i = 0
+  #size = 4000
+  #while i <= len(tunes)/size:
+    #tune_slice = tunes[i*size:(i+1)*size]
+    #with open('thesession-data/cpickled_parsed_{}'.format(i), 'wb') as f:
+      #cPickle.dump(tune_slice, f)
+    #i += 1
