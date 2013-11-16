@@ -148,7 +148,10 @@ def train_test_split(f_vecs, types):
     f_test = f_vecs[n_train:]
     t_test = types[n_train:]
 
-    return f_train, t_train, f_test, t_test
+    t = (f_train, t_train, f_test, t_test)
+    
+    return tuple([np.array(x) for x in t])
+
 
 def breakdown_test_results(t_test, t_predict):
     n = len(type_dict)
@@ -169,6 +172,18 @@ def a_b_classify():
     f_vecs, types = build_a_b_features_labels()
 
     f_train, t_train, f_test, t_test = train_test_split(f_vecs, types)
+
+    clf = svm.SVC()
+    clf.fit(f_train, t_train)
+
+    t_predict = clf.predict(f_test)
+
+    dat = np.zeros((2, 2))
+    for i in xrange(len(t_predict)):
+        dat[t_test[i], t_predict[i]] += 1
+
+    print 'Predicted A | Predicted B'
+    print dat
 
 if __name__ == '__main__':
     from sklearn import svm
