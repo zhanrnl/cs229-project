@@ -21,17 +21,17 @@ meter_dict = {
   'mazurka': '3/4'
   }
 meter_eighth_beats = {
-  'jig': '6',
-  'reel': '8',
-  'slip jig': '9',
-  'hornpipe': '8',
-  'polka': '4',
-  'slide': '12',
-  'waltz': '6',
-  'barndance': '8',
-  'strathspey': '8',
-  'three-two': '12',
-  'mazurka': '6'
+  'jig': 6,
+  'reel': 8,
+  'slip jig': 9,
+  'hornpipe': 8,
+  'polka': 4,
+  'slide': 12,
+  'waltz': 6,
+  'barndance': 8,
+  'strathspey': 8,
+  'three-two': 12,
+  'mazurka': 6
   }
 
 class StrForRepr:
@@ -299,6 +299,17 @@ def total_length(parsed):
       num_beats += note.dur
   return num_beats
 
+def ab_split(tune):
+  unfolded = unfold_repeats(tune['parsed'])
+  length = total_length(unfolded)
+  if length % (meter_eighth_beats[tune['type']]*4) == 0:
+    split = 0
+    while total_length(unfolded[:split]) < length / 2:
+      split += 1
+    return (unfolded[:split], unfolded[split:])
+  else:
+    raise "tune does not split into A and B sections"
+
 """
 Unfolding repeats
 """
@@ -306,14 +317,7 @@ if __name__ == '__main__':
   tunes = load_csv()
   tunes = parse_all_csv(tunes[:10])
   tune = tunes[6]
-  unfolded = unfold_repeats(tune['parsed'])
-  length = total_length(unfolded)
-  if length % (meter_eighth_beats[tune['type']]*4) == 0:
-    pass
-    """
-    TODO: chop in half by length
-    """
-
+  a, b = ab_split(tune)
 
 """
 This main function reads the csv file, parses all the tunes using 4 threads,
