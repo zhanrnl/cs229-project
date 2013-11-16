@@ -1,5 +1,6 @@
 from itertools import islice
 import numpy as np
+from sessionparse import *
 
 one_grams = [str(x) for x in xrange(1, 8)]
 
@@ -111,6 +112,33 @@ def build_all_feature_vectors(n = 3):
 
     return f_vecs, types
 
+def build_a_b_features_labels(n = 3):
+    ''' We hard code 0 as A section, 1 as B section '''
+    import cPickle
+
+    f_vecs = list()
+    types = list()
+
+    d = build_feature_index_map(n)
+
+    for i in xrange(6):
+        tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
+
+        for tune in tunes:
+            try:
+                a, b = ab_split(tune)
+            except:
+                continue
+
+            f_vecs.append(features_from_list_of_bars(a, d, n))
+            types.append(0)
+            
+            f_vecs.append(features_from_list_of_bars(b, d, n))
+            types.append(1)
+
+    return f_vecs, types
+                
+
 def train_test_split(f_vecs, types):
     n_train = int(round(0.7 * len(f_vecs)))
 
@@ -135,6 +163,12 @@ def breakdown_test_results(t_test, t_predict):
 
     import cPickle
     cPickle.dump(arr, open('results','wb'))
+
+def a_b_classify():
+    from sklearn import svm
+    f_vecs, types = build_a_b_features_labels()
+
+    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types)
 
 if __name__ == '__main__':
     from sklearn import svm
