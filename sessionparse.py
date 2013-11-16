@@ -1,6 +1,7 @@
 import csv
 import re
-import pickle
+import cPickle
+from multiprocessing import Pool
 from fractions import *
 from pyparsing import *
 
@@ -112,27 +113,21 @@ def triplet_action(ts):
     note.dur = note.dur * Fraction(2,3)
     return note
   return map(tripletify, ts)
-tripletP = Suppress(
-    (
-      Literal('(3') +
-      noteP + noteP + noteP
-    ) | (
-      Literal('((3') +
-      noteP + noteP + noteP +
-      Literal(')')
-    ))
+tripletP = (
+    Suppress(Literal('(3')) +
+    noteP + noteP + noteP
+  ).setParseAction(triplet_action)
 
 def dotted_action(ts):
   if ts[1] == '>':
-    return [Note(ts[0], Fraction(3,2)), Note(ts[2], Fraction(1,2))]
+    return [Note(ts[0].pitch, Fraction(3,2)), Note(ts[2].pitch, Fraction(1,2))]
   else:
-    return [Note(ts[0], Fraction(1,2)), Note(ts[2], Fraction(3,2))]
+    return [Note(ts[0].pitch, Fraction(1,2)), Note(ts[2].pitch, Fraction(3,2))]
 dottedP = (
     noteP + (
       Literal('>') | Literal('<')
     ) +
-    noteP# +
-    #Suppress(Optional('3'))
+    noteP
     ).setParseAction(dotted_action)
 
 def chord_action(ts):
@@ -148,6 +143,18 @@ Ignore groups of grace notes and chord symbols
 """
 chordSymbolP = Literal('"') + Word(alphas) + Literal('"')
 gracesP = Literal('{') + OneOrMore(noteP) + Literal('}')
+def slurred_action(ts):
+  return ts
+slurredP = (
+    Suppress('(') + OneOrMore(
+      tripletP |
+      dottedP |
+      noteP |
+      chordP |
+      Suppress(gracesP) |
+      Suppress(chordSymbolP)
+    ) + Suppress(')')
+    ).setParseAction(slurred_action)
 def bar_action(ts):
   start_repeat = False
   if ts[0] == '|:':
@@ -159,12 +166,8 @@ def bar_action(ts):
     ts = ts[1:]
   else:
     which_ending = None
-  return Bar(ts[:-1], start_repeat, end_repeat, which_ending)
-"""
-TODO: handle chords reasonably, like pick the top note or first note or
-something. Currently the parsing fails. I don't think we really need the
-information to be handled fully faithfully
-"""
+  bar = Bar(ts[:-1], start_repeat, end_repeat, which_ending)
+  return bar
 barP = (
     Optional(Literal('|:') | Suppress(Literal('|'))) +
     Optional(
@@ -177,8 +180,8 @@ barP = (
       chordP |
       Suppress(gracesP) |
       Suppress(chordSymbolP) |
-      Suppress('(') |
-      Suppress(')')) +
+      slurredP
+      ) +
     ( 
       Literal(':||') |
       Literal(':|') |
@@ -199,32 +202,39 @@ def parse_abc(tune):
   abc = re.sub(r'K:[\w ]+\s*', '', abc, 0, re.MULTILINE)
   return tuneP.parseString(abc)
 
-def parse_all_csv(n=None):
+def load_csv():
   csv.register_dialect('thesession', quoting=csv.QUOTE_MINIMAL,
       doublequote=False, escapechar='\\')
   with open('thesession-data/tunes.csv', 'r') as csvfile:
     all_tunes = list(csv.DictReader(csvfile, dialect='thesession'))
+  return all_tunes
 
-  successful = 0
-  failed = 0
+def tune_parse_fn((i, tune)):
+  if i % 10 == 0:
+    print 'At tune {:>6}...'.format(i)
+  try:
+    tune['parsed'] = list(parse_abc(tune))
+  except ParseException as e:
+    if verbose:
+      print 'Parse error on tune', i
+      print e
+      print tune['abc']
+  return tune
+def parse_all_csv(tunes):
+  pool = Pool(4)
   print 'Starting parsing...'
-  for i, tune in enumerate((all_tunes if n is None else all_tunes[:n])):
-    if i % 100 == 0:
-      print 'At tune', i, '...'
-    try:
-      tune['parsed'] = list(parse_abc(tune))
-      successful += 1
-    except ParseException as e:
-      if verbose:
-        print 'Parse error on tune', i
-        print e
-        print tune['abc']
-      failed += 1
-  print successful, 'tunes parsed successfully,', failed, 'failed'
-
-  return all_tunes if n is None else all_tunes[:n]
+  tunes = pool.map_async(tune_parse_fn, enumerate(tunes), 5)
+  pool.close()
+  pool.join()
+  #print successful, 'tunes parsed successfully,', failed, 'failed'
+  return tunes.get()
 
 if __name__ == '__main__':
-  tunes = parse_all_csv()
-  with open('thesession-data/parsed', 'w') as f:
-    pickle.dump(tunes, f)
+  tunes = load_csv()
+  tunes = parse_all_csv(tunes)
+  i = 0
+  while i <= len(tunes)/4000:
+    tune_slice = tunes[i*4000:(i+1)*4000]
+    with open('thesession-data/cpickled_parsed_{}'.format(i/4000), 'wb') as f:
+      cPickle.dump(tune_slice, f)
+    i += 1
