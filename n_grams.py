@@ -1,6 +1,3 @@
-from sessionparse import *
-from itertools import permutations, combinations
-
 one_grams = [str(x) for x in xrange(1, 8)]
 
 def build_n_grams_helper(n_gram_list_list = None):
