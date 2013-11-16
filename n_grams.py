@@ -122,6 +122,20 @@ def train_test_split(f_vecs, types):
 
     return f_train, t_train, f_test, t_test
 
+def breakdown_test_results(t_test, t_predict):
+    n = len(type_dict)
+    arr = np.zeros(shape=(n,n))
+
+    for i, nn_type in enumerate(t_predict):
+        arr[t_test[i], nn_type] += 1
+
+    print type_dict.keys()
+    print arr
+    print sum(arr)
+
+    import cPickle
+    cPickle.dump(arr, open('results','wb'))
+
 if __name__ == '__main__':
     from sklearn import svm
     f_vecs, types = build_all_feature_vectors()
@@ -133,6 +147,9 @@ if __name__ == '__main__':
     
     t_predict = lin_clf.predict(f_test)
 
+    breakdown_test_results(t_test, t_predict)
+
+    '''
     type_errors = np.zeros(11, dtype='int32')
     type_nums = np.zeros(11, dtype='int32')
 
@@ -148,3 +165,4 @@ if __name__ == '__main__':
     
     print frac_total_error
     print frac_error
+    '''
