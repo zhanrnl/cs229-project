@@ -20,6 +20,19 @@ meter_dict = {
   'three-two': '3/2',
   'mazurka': '3/4'
   }
+meter_eighth_beats = {
+  'jig': '6',
+  'reel': '8',
+  'slip jig': '9',
+  'hornpipe': '8',
+  'polka': '4',
+  'slide': '12',
+  'waltz': '6',
+  'barndance': '8',
+  'strathspey': '8',
+  'three-two': '12',
+  'mazurka': '6'
+  }
 
 class StrForRepr:
   def __repr__(self):
@@ -229,11 +242,78 @@ def parse_all_csv(tunes):
   #print successful, 'tunes parsed successfully,', failed, 'failed'
   return tunes.get()
 
+
+def unfold_repeats(parsed):
+  start_repeat = -1
+  end_repeat = -1
+  first_ending = -1
+  second_ending = -1
+  next_section = -1
+  for i, bar in enumerate(parsed):
+    if bar.start_repeat:
+      start_repeat = i
+      break
+  if start_repeat == -1:
+    start_repeat = 0
+  for i, bar in enumerate(parsed):
+    if bar.end_repeat:
+      end_repeat = i
+      break
+  for i, bar in enumerate(parsed):
+    if bar.which_ending == 1:
+      first_ending = i
+      break
+  for i, bar in enumerate(parsed):
+    if bar.which_ending == 2:
+      second_ending = i
+      break
+  for i, bar in enumerate(parsed):
+    if bar.start_repeat and i > start_repeat:
+      start_repeat = i
+      break
+  if second_ending != -1:
+    if next_section == -1:
+      next_section = second_ending + 1
+    first_section = (parsed[0:start_repeat] +
+        parsed[start_repeat:first_ending] +
+        parsed[first_ending:second_ending] +
+        parsed[start_repeat:first_ending] +
+        parsed[second_ending:next_section]
+        )
+    return first_section + unfold_repeats(parsed[next_section:])
+  elif end_repeat != -1:
+    if next_section == -1:
+      next_section = end_repeat + 1
+    first_section = (parsed[0:start_repeat] +
+        parsed[start_repeat:next_section] +
+        parsed[start_repeat:next_section]
+        )
+    return first_section + unfold_repeats(parsed[next_section:])
+  else:
+    return parsed
+
+def total_length(parsed):
+  num_beats = 0
+  for bar in parsed:
+    for note in bar:
+      num_beats += note.dur
+  return num_beats
+
 """
-TODO: start working on breaking into A and B section
+Unfolding repeats
 """
 if __name__ == '__main__':
-  pass
+  tunes = load_csv()
+  tunes = parse_all_csv(tunes[:10])
+  tune = tunes[6]
+  unfolded = unfold_repeats(tune['parsed'])
+  length = total_length(unfolded)
+  if length % (meter_eighth_beats[tune['type']]*4) == 0:
+    pass
+    """
+    TODO: chop in half by length
+    """
+
 
 """
 This main function reads the csv file, parses all the tunes using 4 threads,
