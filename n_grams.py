@@ -86,6 +86,8 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
 
     return features
 
+type_dict = {'jig': 0, 'reel': 1, 'slip jig': 2, 'hornpipe': 3, 'polka': 4, 'slide': 5, 'waltz': 6, 'barndance': 7, 'strathspey': 8, 'three-two': 9, 'mazurka': 10}
+
 def build_all_feature_vectors(n = 3):
     '''
     Builds all feature vectors from the whole list of parsed songs
@@ -105,6 +107,27 @@ def build_all_feature_vectors(n = 3):
         for tune in tunes:
             if 'parsed' in tune:
                 f_vecs.append(features_from_list_of_bars(tune['parsed'], d, n))
-                types.append(tune['type'])
+                types.append(type_dict[tune['type']])
 
     return f_vecs, types
+
+def train_test_split(f_vecs, types):
+    n_train = int(round(0.7 * len(f_vecs)))
+
+    f_train = f_vecs[:n_train]
+    t_train = types[:n_train]
+
+    f_test = f_vecs[n_train:]
+    t_test = types[n_train:]
+
+    return f_train, t_train, f_test, t_test
+
+if __name__ == '__main__':
+    from sklearn import svm
+    f_vecs, types = build_all_feature_vectors()
+
+    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types)
+    
+    lin_clf = svm.LinearSVC()
+    lin_clf.fit(f_train, t_train)
+
