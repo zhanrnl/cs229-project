@@ -1,9 +1,12 @@
 \documentclass{article} % For LaTeX2e
 \usepackage{nips13submit_e,times}
 \usepackage{hyperref}
+\usepackage{cleveref}
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{placeins}
+\usepackage{fancyvrb}
+\usepackage[font={small,it},width=5in]{caption}
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
@@ -70,8 +73,9 @@ Available on their website is a set of roughly 21 thousand dance tune settings
 in ABC notation, a human-readable symbolic music data format in plain text. The
 ABC files are easily parsed and manipulated symbolically for feature extraction.
 \FloatBarrier
-\begin{figure}
-  \begin{verbatim}
+\begin{figure}[t]
+  \begin{center}
+  \begin{BVerbatim}
 X: 1
 T: Drowsy Maggie
 R: reel
@@ -82,18 +86,24 @@ K:Edor
 K:D
 d2fd c2ec|defg afge|d2fd c2ec|BABc dAFA|
 d2fd c2ec|defg afge|afge fdec|BABc dAFD|
-  \end{verbatim}
+  \end{BVerbatim}
+  \end{center}
   \caption{\textit{Drowsy Maggie}, an example of a tune in ABC notation from
   \texttt{thesession.org}.}
 \end{figure}
-\begin{figure}
+
+\begin{figure}[t]
   \begin{center}
     \includegraphics[width=5in]{drowsymaggie.png}
   \end{center}
   \caption{A rendering of \textit{Drowsy Maggie} in standard musical notation, for
   comparison with ABC notation. The $A$ section of this tune can be seen in the
-first line, while the $B$ section spans the second and third line. The $A$ and
-$B$ sections are the same length since the first four bars are repeated.}
+first line, while the $B$ section spans the second and third lines. The $A$ and
+$B$ sections are the same length since the first four bars are repeated---both
+are eight bars long when performed. Note that this tune, like many others, has
+four-bar phrases, which supports the heuristic we are using for splitting into
+$A$ and $B$ sections.}
+  \label{fig:drowsymusic}
 \end{figure}
 %\FloatBarrier
 
@@ -123,9 +133,11 @@ tune evenly in half. This is an imprecise heuristic, but should work well in
 practice because $A$ and $B$ sections generally have the same number of bars as
 they most commonly have parallel musical structure, and also because these
 traditional tunes most commonly have 4-bar phrases within $A$ and $B$ sections.
+See \cref{fig:drowsymusic} for an example.
 
 \section{Preliminary classification experiments}
 
+<<<<<<< HEAD
 Before we implemented the heuristic to split tunes into $A$ and $B$ sections
 and began classification experiments on these, we used an SVM to attempt to 
 classify tunes into one of the 11 types of dances in our dataset (e.g. jigs,
@@ -144,11 +156,13 @@ an SVM using a Gaussian kernel to classify sequences of notes as $A$ sections
 or $B$ sections. We trained on 70\% of our dataset and tested the remaining 
 30\%, and found the following promising results:
 
+\begin{center}
 \begin{tabular}{c|cc}
              & Predicted $A$ & Predicted $B$ \\ \hline
 Actually $A$ & 2049          & 1325          \\
 Actually $B$ & 1245          & 2130
 \end{tabular}
+\end{center}
 
 We anticipate even better results for this classifier upon updating our
 feature extraction because, for example, we believe that $B$ sections are
