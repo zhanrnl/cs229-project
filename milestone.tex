@@ -5,7 +5,8 @@
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{placeins}
-\usepackage[font={small,it}]{caption}
+\usepackage{fancyvrb}
+\usepackage[font={small,it},width=5in]{caption}
 %\documentstyle[nips13submit_09,times,art10]{article} % For LaTeX 2.09
 
 
@@ -73,7 +74,8 @@ in ABC notation, a human-readable symbolic music data format in plain text. The
 ABC files are easily parsed and manipulated symbolically for feature extraction.
 \FloatBarrier
 \begin{figure}[t]
-  \begin{verbatim}
+  \begin{center}
+  \begin{BVerbatim}
 X: 1
 T: Drowsy Maggie
 R: reel
@@ -84,7 +86,8 @@ K:Edor
 K:D
 d2fd c2ec|defg afge|d2fd c2ec|BABc dAFA|
 d2fd c2ec|defg afge|afge fdec|BABc dAFD|
-  \end{verbatim}
+  \end{BVerbatim}
+  \end{center}
   \caption{\textit{Drowsy Maggie}, an example of a tune in ABC notation from
   \texttt{thesession.org}.}
 \end{figure}
@@ -134,10 +137,12 @@ See \cref{fig:drowsymusic} for an example.
 
 \section{Preliminary classification experiments}
 
+\begin{center}
 \begin{tabular}{c|cc}
              & Predicted $A$ & Predicted $B$ \\ \hline
 Actually $A$ & 2049          & 1325          \\
 Actually $B$ & 1245          & 2130
 \end{tabular}
+\end{center}
 
 \end{document}
