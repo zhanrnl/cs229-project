@@ -2,13 +2,14 @@ from itertools import islice
 import numpy as np
 from sessionparse import *
 
-one_grams = [str(x) for x in xrange(1, 8)]
+feature_list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 
 def build_n_grams_helper(n_gram_list_list = None):
     ''' 
     Given a list where the nth element is the list of n-grams, returns
     a copy of this list with an (n+1)th element that is the list of (n+1)-grams
     '''
+    one_grams = [(x,) for x in feature_list]
 
     if n_gram_list_list == None:
         return [one_grams]
@@ -61,11 +62,11 @@ def window(seq, n):
 
 def gram_str_from_tuple(gram_tuple):
     '''
-    Given a tuple of pitches, returns string of 1..7 to be used as a key
+    Given a tuple of pitches, returns string of 1..14 to be used as a key
     in the index dictionary
     '''
-    c_list = [ord(x) - ord('a') + 1 for x in gram_tuple]
-    return ''.join([str(x) for x in c_list if (x >= 1 and x <= 7)])
+
+    return tuple([feature_map[x] for x in gram_tuple])
 
 # LENNART .pitch SOMETIMES RETURNS NOTES INSTEAD OF STRINGS WHY?!?!?!
 # (hence the str(x.pitch))
@@ -74,43 +75,18 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
     Given a list of bars (i.e. the 'parsed' element of a Tune) return the
     associated feature vector for all k-grams, k <= n
     '''
+    pitch_str = ''.join([str(x.pitch) for b in list_of_bars for x in b])
 
-    pitch_str = ''.join([str(x.pitch) for b in list_of_bars for x in b]).lower()
+    # update this later when we add accidentals
+    pitch_str = [x for x in pitch_str if x in 'abcdefgABCDEFG']
 
     features = np.zeros(len(n_gram_dict))
 
     for k in xrange(1, n + 1):
         for gram in window(pitch_str, k):
-            gram_str = gram_str_from_tuple(gram)
-            if len(gram_str) > 0:
-                features[n_gram_dict[gram_str]] += 1
+            features[n_gram_dict[gram]] += 1
 
     return features
-
-type_dict = {'jig': 0, 'reel': 1, 'slip jig': 2, 'hornpipe': 3, 'polka': 4, 'slide': 5, 'waltz': 6, 'barndance': 7, 'strathspey': 8, 'three-two': 9, 'mazurka': 10}
-
-def build_all_feature_vectors(n = 3):
-    '''
-    Builds all feature vectors from the whole list of parsed songs
-    '''
-    
-    import cPickle
-
-    f_vecs = list()
-    types = list()
-
-    d = build_feature_index_map(n)
-
-    # 6 is hardcoded number of chunks of the parsed list
-    for i in xrange(6):
-        tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
-        
-        for tune in tunes:
-            if 'parsed' in tune:
-                f_vecs.append(features_from_list_of_bars(tune['parsed'], d, n))
-                types.append(type_dict[tune['type']])
-
-    return f_vecs, types
 
 def build_a_b_features_labels(n = 3):
     ''' We hard code 0 as A section, 1 as B section '''
@@ -139,8 +115,10 @@ def build_a_b_features_labels(n = 3):
     return f_vecs, types
                 
 
-def train_test_split(f_vecs, types):
-    n_train = int(round(0.7 * len(f_vecs)))
+def train_test_split(f_vecs, types, fraction = 0.7):
+    assert(fraction > 0 and fraction < 1)
+
+    n_train = int(round(fraction * len(f_vecs)))
 
     f_train = f_vecs[:n_train]
     t_train = types[:n_train]
@@ -153,25 +131,11 @@ def train_test_split(f_vecs, types):
     return tuple([np.array(x) for x in t])
 
 
-def breakdown_test_results(t_test, t_predict):
-    n = len(type_dict)
-    arr = np.zeros(shape=(n,n))
-
-    for i, nn_type in enumerate(t_predict):
-        arr[t_test[i], nn_type] += 1
-
-    print type_dict.keys()
-    print arr
-    print sum(arr)
-
-    import cPickle
-    cPickle.dump(arr, open('results','wb'))
-
-def a_b_classify():
+def a_b_classify(n = 3):
     from sklearn import svm
-    f_vecs, types = build_a_b_features_labels()
+    f_vecs, types = build_a_b_features_labels(n)
 
-    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types)
+    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
 
     clf = svm.SVC()
     clf.fit(f_train, t_train)
@@ -182,36 +146,20 @@ def a_b_classify():
     for i in xrange(len(t_predict)):
         dat[t_test[i], t_predict[i]] += 1
 
+    print 'Test results'
     print 'Predicted A | Predicted B'
     print dat
 
+    t_train_predict = clf.predict(f_train)
+
+    print 'Training results'
+    print 'Predicted A | Predicted B'
+    
+    dat = np.zeros((2, 2))
+    for i in xrange(len(t_train_predict)):
+        dat[t_train[i], t_train_predict[i]] += 1
+
+    print dat
+
 if __name__ == '__main__':
-    from sklearn import svm
-    f_vecs, types = build_all_feature_vectors()
-
-    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types)
-    
-    lin_clf = svm.LinearSVC()
-    lin_clf.fit(f_train, t_train)
-    
-    t_predict = lin_clf.predict(f_test)
-
-    breakdown_test_results(t_test, t_predict)
-
-    '''
-    type_errors = np.zeros(11, dtype='int32')
-    type_nums = np.zeros(11, dtype='int32')
-
-    for i in range(len(t_test)):
-        type_nums[t_test[i]] += 1
-        if t_test[i] != t_predict[i]:
-            type_errors[t_test[i]] += 1
-
-    frac_total_error = sum(type_errors) / float(len(t_test))
-    frac_error = np.zeros(11)
-    for i in range(11):
-        frac_error[i] = type_errors[i] / float(type_nums[i])
-    
-    print frac_total_error
-    print frac_error
-    '''
+    a_b_classify(2)
