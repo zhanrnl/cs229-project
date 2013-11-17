@@ -126,10 +126,33 @@ traditional tunes most commonly have 4-bar phrases within $A$ and $B$ sections.
 
 \section{Preliminary classification experiments}
 
+Before we implemented the heuristic to split tunes into $A$ and $B$ sections
+and began classification experiments on these, we used an SVM to attempt to 
+classify tunes into one of the 11 types of dances in our dataset (e.g. jigs,
+reels). We did this to test our infrastructure (i.e. to make sure our ABC 
+parser worked) as well as to get a sense of the viability of the $n$-gram
+features described above. This also served as a useful benchmark of our data set
+size (enough data to get meaningful results but not so much as to prohibit
+timely training of our model). We found fairly mediocre classification results,
+but we classified some types of dances reasonably well (e.g. we classified 
+approximately 60\% of the polkas correctly), and we expect we would have done
+better by improving some of the shortcomings of our feature extraction scheme 
+(as described above).
+
+After heuristically splitting our data into $A$ and $B$ sections, we trained
+an SVM using a Gaussian kernel to classify sequences of notes as $A$ sections
+or $B$ sections. We trained on 70\% of our dataset and tested the remaining 
+30\%, and found the following promising results:
+
 \begin{tabular}{c|cc}
              & Predicted $A$ & Predicted $B$ \\ \hline
 Actually $A$ & 2049          & 1325          \\
 Actually $B$ & 1245          & 2130
 \end{tabular}
+
+We anticipate even better results for this classifier upon updating our
+feature extraction because, for example, we believe that $B$ sections are
+generally higher pitched than $A$ sections, and including information about
+the octave of a note will make this more discernible to our classifier.
 
 \end{document}
