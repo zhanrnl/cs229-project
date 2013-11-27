@@ -68,8 +68,6 @@ def gram_str_from_tuple(gram_tuple):
 
     return tuple([feature_map[x] for x in gram_tuple])
 
-# LENNART .pitch SOMETIMES RETURNS NOTES INSTEAD OF STRINGS WHY?!?!?!
-# (hence the str(x.pitch))
 def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
     ''' 
     Given a list of bars (i.e. the 'parsed' element of a Tune) return the
@@ -87,79 +85,3 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
             features[n_gram_dict[gram]] += 1
 
     return features
-
-def build_a_b_features_labels(n = 3):
-    ''' We hard code 0 as A section, 1 as B section '''
-    import cPickle
-
-    f_vecs = list()
-    types = list()
-
-    d = build_feature_index_map(n)
-
-    for i in xrange(6):
-        tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
-
-        for tune in tunes:
-            try:
-                a, b = ab_split(tune)
-            except:
-                continue
-
-            f_vecs.append(features_from_list_of_bars(a, d, n))
-            types.append(0)
-            
-            f_vecs.append(features_from_list_of_bars(b, d, n))
-            types.append(1)
-
-    return f_vecs, types
-                
-
-def train_test_split(f_vecs, types, fraction = 0.7):
-    assert(fraction > 0 and fraction < 1)
-
-    n_train = int(round(fraction * len(f_vecs)))
-
-    f_train = f_vecs[:n_train]
-    t_train = types[:n_train]
-
-    f_test = f_vecs[n_train:]
-    t_test = types[n_train:]
-
-    t = (f_train, t_train, f_test, t_test)
-    
-    return tuple([np.array(x) for x in t])
-
-
-def a_b_classify(n = 3):
-    from sklearn import svm
-    f_vecs, types = build_a_b_features_labels(n)
-
-    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
-
-    clf = svm.SVC()
-    clf.fit(f_train, t_train)
-
-    t_predict = clf.predict(f_test)
-
-    dat = np.zeros((2, 2))
-    for i in xrange(len(t_predict)):
-        dat[t_test[i], t_predict[i]] += 1
-
-    print 'Test results'
-    print 'Predicted A | Predicted B'
-    print dat
-
-    t_train_predict = clf.predict(f_train)
-
-    print 'Training results'
-    print 'Predicted A | Predicted B'
-    
-    dat = np.zeros((2, 2))
-    for i in xrange(len(t_train_predict)):
-        dat[t_train[i], t_train_predict[i]] += 1
-
-    print dat
-
-if __name__ == '__main__':
-    a_b_classify(2)
