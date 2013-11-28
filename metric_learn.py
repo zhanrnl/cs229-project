@@ -2,7 +2,7 @@ from n_grams import build_feature_index_map, features_from_list_of_bars
 import numpy as np
 import copy
 from sessionparse import *
-from cvxopt import solvers, matrix, spdiag
+from cvxopt import solvers, matrix, spdiag, lapack
 import cPickle
 
 def mat_to_col_major_order(a):
@@ -23,12 +23,11 @@ def sdp_params(ys):
     c = matrix(mat_to_col_major_order(c))
 
     G1 = spdiag(matrix(-1 * np.ones(n ** 2)))
-    h1 = matrix(np.zeros((n, n)))
+    h1 = matrix(np.zeros(n ** 2))
+    
+    dims = {'l': 0, 'q': [], 's': [n]}
 
-    Gs = [G1]
-    hs = [h1]
-
-    return c, Gs, hs
+    return c, G1, h1, dims
 
 def ys_from_pairs(pairs):
     n = len(pairs[0][0])
