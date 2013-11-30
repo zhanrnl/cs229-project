@@ -2,7 +2,7 @@ from n_grams import build_feature_index_map, features_from_list_of_bars
 import numpy as np
 import copy
 from sessionparse import *
-from cvxopt import solvers, matrix, spdiag, lapack
+from cvxopt import solvers, matrix, spdiag, lapack, spmatrix
 import cPickle
 
 def mat_to_col_major_order(a):
@@ -14,20 +14,58 @@ def col_major_order_to_mat(a):
 
 def sdp_params(ys):
     n, m = ys.shape
-    c = np.zeros((n, n))
 
-    for i in xrange(n):
-        for j in xrange(n):
-            c[i, j] = ys[i, :].dot(ys[j, :])
+    packed_size = n * (n + 1) / 2
 
-    c = matrix(mat_to_col_major_order(c))
+    c = np.zeros(packed_size)
+    cmat = np.zeros((n, n))
 
-    G1 = spdiag(matrix(-1 * np.ones(n ** 2)))
-    h1 = matrix(np.zeros(n ** 2))
+    kk = 0
+
+    index_dict = dict()
+    index_dict_flip = dict()
+
+    for j in xrange(n):
+        for i in xrange(j, n):
+            val = ys[i, :].dot(ys[j, :])
+            c[kk] = val
+            cmat[i, j] = val
+            cmat[j, i] = val
+
+            index_dict[(i, j)] = kk
+            index_dict[(j, i)] = kk
+            index_dict_flip[kk] = (i, j)
+            kk += 1
+
+    c = matrix(c)
+
+    # G needs to get more complicated, i.e. we need it to regenerate the full
+    # matrix from the lower triangle
+
+    j_inx = list()
+    for ijn in xrange(n ** 2):
+        i = ijn % n
+        j = ijn / n
+
+        j_inx.append(index_dict[(i, j)])
+
+    G = spmatrix([-1] * (n ** 2), range(n ** 2), j_inx, (n ** 2, packed_size))
+    harr = np.zeros((n, n))
+    h = matrix(mat_to_col_major_order(harr))
     
     dims = {'l': 0, 'q': [], 's': [n]}
 
-    return c, G1, h1, dims
+    return c, cmat, G, h, dims, index_dict_flip
+
+def recover_matrix_from_soln(x, index_dict_flip, n):
+    xmat = np.zeros((n, n))
+
+    for kk, val in enumerate(np.array(x)):
+        i, j = index_dict_flip[kk]
+        xmat[i, j] = val
+        xmat[j, i] = val
+
+    return xmat
 
 def ys_from_pairs(pairs):
     n = len(pairs[0][0])
