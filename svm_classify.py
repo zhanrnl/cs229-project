@@ -113,7 +113,7 @@ def a_b_classify(n = 2, num_blocks = 6):
     print 'Confusion matrix on training data:'
     print confusion_matrix(t_train, t_train_predict)
 
-def a_b_classify_pca(n = 2, num_blocks = 6):
+def a_b_classify_pca(n = 2, num_blocks = 6, n_components = 35):
     '''
     Uses an SVM to classify A and B sections based on the feature vectors
     built above, and returns some statistical results
@@ -124,7 +124,7 @@ def a_b_classify_pca(n = 2, num_blocks = 6):
     f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
 
     print '{0}: Starting PCA (this could take a while...)'.format(time.ctime())
-    pca = PCA(n_components = 35)
+    pca = PCA(n_components = n_components)
     pca.fit(f_train)
     f_train_pca = list(pca.transform(f_train))
     f_test_pca = list(pca.transform(f_test))
