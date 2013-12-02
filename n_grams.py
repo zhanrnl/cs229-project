@@ -36,7 +36,7 @@ def build_n_grams(n):
 
 def build_feature_index_map(n = 3):
     ''' 
-    Generates a dictionary with keys that are n-grams of notes (1..7),
+    Generates a dictionary with keys that are n-grams of notes (A..g),
     and where each value is the corresponding index in our feature vector
     of the count for that n-gram 
     '''
@@ -73,10 +73,10 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
     Given a list of bars (i.e. the 'parsed' element of a Tune) return the
     associated feature vector for all k-grams, k <= n
     '''
-    pitch_str = ''.join([str(x.pitch) for b in list_of_bars for x in b])
+    pitch_str = ''.join([str(x.pitch)[-1] for b in list_of_bars for x in b])
 
     # update this later when we add accidentals
-    pitch_str = [x for x in pitch_str if x in 'abcdefgABCDEFG']
+    #pitch_str = [x for x in pitch_str if x in ''.join(feature_list)]
 
     features = np.zeros(len(n_gram_dict))
 
@@ -85,3 +85,12 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
             features[n_gram_dict[gram]] += 1
 
     return features
+
+def features_multibar_split(bars, n_gram_dict, n=3):
+  assert(len(bars) % 8 == 0)
+  slice_len = int(len(bars) / 8)
+  f_vec = []
+  for i in range(8):
+    f_vec.extend(features_from_list_of_bars(
+      bars[(i*slice_len) : ((i+1)*slice_len)], n_gram_dict, n))
+  return f_vec
