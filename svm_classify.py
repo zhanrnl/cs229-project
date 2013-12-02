@@ -1,3 +1,4 @@
+from sklearn.decomposition import PCA
 from n_grams import *
 from sklearn import svm
 from sklearn.metrics import confusion_matrix
@@ -94,11 +95,8 @@ def a_b_classify(n = 2, num_blocks = 6):
     '''
     print '{0}: Building feature vectors'.format(time.ctime())
     f_vecs, types = build_a_b_features_labels(n = n, num_blocks = num_blocks)
-    print len(f_vecs)
 
     f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
-
-    print len(f_train), len(f_test)
 
     print '{0}: Training the SVM'.format(time.ctime())
     clf = svm.SVC()
@@ -114,6 +112,38 @@ def a_b_classify(n = 2, num_blocks = 6):
 
     print 'Confusion matrix on training data:'
     print confusion_matrix(t_train, t_train_predict)
+
+def a_b_classify_pca(n = 2, num_blocks = 6):
+    '''
+    Uses an SVM to classify A and B sections based on the feature vectors
+    built above, and returns some statistical results
+    '''
+    print '{0}: Building feature vectors'.format(time.ctime())
+    f_vecs, types = build_a_b_features_labels(n = n, num_blocks = num_blocks)
+
+    f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
+
+    print '{0}: Starting PCA (this could take a while...)'.format(time.ctime())
+    pca = PCA(n_components = 35)
+    pca.fit(f_train)
+    f_train_pca = list(pca.transform(f_train))
+    f_test_pca = list(pca.transform(f_test))
+
+    print '{0}: Training the SVM'.format(time.ctime())
+    clf = svm.SVC()
+    clf.fit(f_train_pca, t_train)
+
+    t_predict = clf.predict(f_test_pca)
+    t_train_predict = clf.predict(f_train_pca)
+    
+    print 'Confusion matrix is built so that C_ij is the number of observations known to be in group i but predicted to be in group j. In this case, group 0 corresponds to A sections and group 1 corresponds to B sections.'
+    
+    print 'Confusion matrix on test data:'
+    print confusion_matrix(t_test, t_predict)
+
+    print 'Confusion matrix on training data:'
+    print confusion_matrix(t_train, t_train_predict)
+    
 
 if __name__ == '__main__':
   if debug:
