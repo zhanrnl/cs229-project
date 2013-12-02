@@ -73,10 +73,10 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
     Given a list of bars (i.e. the 'parsed' element of a Tune) return the
     associated feature vector for all k-grams, k <= n
     '''
-    pitch_str = ''.join([str(x.pitch)[-1] for b in list_of_bars for x in b])
+    pitch_str = ''.join([str(x.pitch) for b in list_of_bars for x in b])
 
     # update this later when we add accidentals
-    #pitch_str = [x for x in pitch_str if x in ''.join(feature_list)]
+    pitch_str = [x for x in pitch_str if x in ''.join(feature_list)]
 
     features = np.zeros(len(n_gram_dict))
 
@@ -87,10 +87,25 @@ def features_from_list_of_bars(list_of_bars, n_gram_dict, n = 3):
     return features
 
 def features_multibar_split(bars, n_gram_dict, n=3):
-  assert(len(bars) % 8 == 0)
-  slice_len = int(len(bars) / 8)
+  notes = [no for b in bars for no in b]
+  length = int(total_length([notes]))
+  num_slices = 0
   f_vec = []
-  for i in range(8):
-    f_vec.extend(features_from_list_of_bars(
-      bars[(i*slice_len) : ((i+1)*slice_len)], n_gram_dict, n))
+  eighth_slice = []
+  for no in notes:
+    if num_slices == 8:
+      break
+    eighth_slice.append(no)
+    if total_length([eighth_slice]) >= (length / 8):
+      f_vec.extend(features_from_list_of_bars([eighth_slice], n_gram_dict, n))
+      eighth_slice = []
+      num_slices += 1
+  for i in range(8 - num_slices):
+    f_vec.extend(features_from_list_of_bars([], n_gram_dict, n))
   return f_vec
+
+  #slice_len = int(len(bars) / 8)
+  #for i in range(8):
+    #f_vec.extend(features_from_list_of_bars(
+      #bars[(i*slice_len) : ((i+1)*slice_len)], n_gram_dict, n))
+  #return f_vec

@@ -32,9 +32,9 @@ def load_pickled((i, d, n)):
           num_not_split += 1
           continue
 
-        f_vecs.append(features_from_list_of_bars(a, d, n))
+        f_vecs.append(features_multibar_split(a, d, n))
         types.append(0)
-        f_vecs.append(features_from_list_of_bars(b, d, n))
+        f_vecs.append(features_multibar_split(b, d, n))
         types.append(1)
 
     print '{} tunes successfully split, {} did not split, {} '\
