@@ -267,10 +267,15 @@ def unfold_repeats(parsed):
     if bar.which_ending == 2:
       second_ending = i
       break
-  for i, bar in enumerate(parsed):
-    if bar.start_repeat and i > start_repeat:
-      start_repeat = i
-      break
+  '''
+  TODO: figure out why the hell these four lines were written at all.
+  Currently I can't see what they do besides cause bugs with correct repeat
+  unfolding
+  '''
+  #for i, bar in enumerate(parsed):
+    #if bar.start_repeat and i > start_repeat:
+      #start_repeat = i
+      #break
   if second_ending != -1:
     if next_section == -1:
       next_section = second_ending + 1
@@ -300,15 +305,30 @@ def total_length(parsed):
   return num_beats
 
 def ab_split(tune):
+  """
+  Adding some more heuristics to eliminate irrelevent data. Songs that are too
+  long are unlikely to have the structure we want, restricting basically
+  to 4 or 8 bar long A and B sections.
+  B section can't start with the second iteration of a repeat. This rules out
+  tunes which are just one big repeated section (probably incomplete tunes)
+  """
   unfolded = unfold_repeats(tune['parsed'])
-  length = total_length(unfolded)
-  if length % (meter_eighth_beats[tune['type']]*4) == 0:
-    split = 0
-    while total_length(unfolded[:split]) < length / 2:
-      split += 1
-    return (unfolded[:split], unfolded[split:])
-  else:
-    raise "tune does not split into A and B sections"
+  length = int(total_length(unfolded))
+  if length % (meter_eighth_beats[tune['type']] * 8) != 0:
+    raise ValueError("tune doesn't have a multiple of 8 bars")
+  length_in_bars = length / meter_eighth_beats[tune['type']]
+  if length_in_bars > 32:
+    raise ValueError("tune over 32 bars long")
+  if (length_in_bars & (length_in_bars - 1) != 0) and length_in_bars > 0:
+    raise ValueError("tune must be a power of 2 bars long")
+  split = 0
+  while total_length(unfolded[:split]) < length / 2:
+    split += 1
+  if total_length(unfolded[:split]) != length / 2:
+    raise ValueError("could not split tune exactly into two halves by number of 8th notes")
+  a = unfolded[:split]
+  b = unfolded[split:]
+  return (a, b)
 
 """
 Unfolding repeats

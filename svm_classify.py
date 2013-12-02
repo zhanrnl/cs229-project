@@ -3,6 +3,45 @@ from sklearn import svm
 from sklearn.metrics import confusion_matrix
 import cPickle
 import time
+from multiprocessing import Pool
+import itertools
+
+debug = False
+
+def load_pickled((i, d, n)):
+    f_vecs = []
+    types = []
+    tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'\
+        .format(i), 'rb'))
+    print '{}: pickle loaded file {}'.format(time.ctime(), i)
+
+    num_split = 0
+    num_not_split = 0
+    num_not_parsed = 0
+    for tune in tunes:
+        if 'parsed' not in tune:
+          num_not_parsed += 1
+          continue
+
+        try:
+          a, b = ab_split(tune)
+          num_split += 1
+        except ValueError as e:
+          if debug:
+            print e
+          num_not_split += 1
+          continue
+
+        f_vecs.append(features_from_list_of_bars(a, d, n))
+        types.append(0)
+        f_vecs.append(features_from_list_of_bars(b, d, n))
+        types.append(1)
+
+    print '{} tunes successfully split, {} did not split, {} '\
+        'didn\'t parse at all, {} total'.format(num_split,
+            num_not_split, num_not_parsed, num_not_parsed + num_split
+            + num_not_split)
+    return (f_vecs, types)
 
 def build_a_b_features_labels(n = 3, num_blocks = 6):
     ''' 
@@ -11,25 +50,19 @@ def build_a_b_features_labels(n = 3, num_blocks = 6):
     '''
     assert(num_blocks >= 1 and num_blocks <= 6)
 
-    f_vecs = list()
-    types = list()
-
     d = build_feature_index_map(n)
 
-    for i in xrange(num_blocks):
-        tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
+    pool = Pool()
 
-        for tune in tunes:
-            try:
-                a, b = ab_split(tune)
-            except:
-                continue
-
-            f_vecs.append(features_from_list_of_bars(a, d, n))
-            types.append(0)
-            
-            f_vecs.append(features_from_list_of_bars(b, d, n))
-            types.append(1)
+    mapresult = pool.map_async(load_pickled, [(i, d, n) for i in range(num_blocks)], 1)
+    pool.close()
+    pool.join()
+    results = mapresult.get()
+    f_vecs = []
+    types = []
+    for f, t in results:
+      f_vecs.extend(f)
+      types.extend(t)
 
     return f_vecs, types
                 
@@ -61,8 +94,11 @@ def a_b_classify(n = 2, num_blocks = 6):
     '''
     print '{0}: Building feature vectors'.format(time.ctime())
     f_vecs, types = build_a_b_features_labels(n = n, num_blocks = num_blocks)
+    print len(f_vecs)
 
     f_train, t_train, f_test, t_test = train_test_split(f_vecs, types, fraction = 0.9)
+
+    print len(f_train), len(f_test)
 
     print '{0}: Training the SVM'.format(time.ctime())
     clf = svm.SVC()
@@ -80,4 +116,7 @@ def a_b_classify(n = 2, num_blocks = 6):
     print confusion_matrix(t_train, t_train_predict)
 
 if __name__ == '__main__':
+  if debug:
+    a_b_classify(n = 2, num_blocks = 1)
+  else:
     a_b_classify(n = 2, num_blocks = 6)
