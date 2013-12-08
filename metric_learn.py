@@ -4,6 +4,9 @@ import copy
 from sessionparse import *
 from cvxopt import solvers, matrix, spdiag, lapack, spmatrix
 import cPickle
+import scipy.io
+import subprocess
+from sklearn.decomposition import PCA
 
 def mat_to_col_major_order(a):
     return a.reshape((a.size, 1), order='F')
@@ -23,8 +26,15 @@ def save_cvx_params(ys):
             cmat[i, j] = val
             cmat[j, i] = val
 
-    import scipy.io
     scipy.io.savemat('cmat.mat',{'cmat': cmat})
+
+def run_cvx():
+    subprocess.call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', 'try, sdp_solve, catch, exit, end, exit'])
+
+def load_cvx_result():
+    result = scipy.io.loadmat('result.mat')
+    M = result['M']
+    return M
 
 def recover_matrix_from_soln(x, index_dict_flip, n):
     xmat = np.zeros((n, n))
@@ -73,3 +83,32 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
             pairs.append((a_sec, b_sec))
 
     return pairs
+
+def metric_learn():
+    pairs = build_a_b_pairs_vector(2, 6)
+    n_train = int(round(0.7 * len(pairs)))
+
+    pairs_train = pairs[:n_train]
+    pairs_train_flat = [item for subtuple in pairs_train for item in subtuple]
+    
+    pca = PCA(n_components = 35)
+    pca.fit(pairs_train_flat)
+
+    pairs_flat = [item for subtuple in pairs_train for item in subtuple]
+    pairs_pca_flat = pca.transform(pairs_flat)
+    
+    pairs_pca = list()
+    for i in xrange(0, len(pairs_pca_flat), 2):
+        a = i 
+        b = i + 1
+        pairs_pca.append((pairs_pca_flat[a], pairs_pca_flat[b]))
+    
+    pairs_pca_train = pairs_pca[:n_train]
+
+    ys = ys_from_pairs(pairs_pca_train)
+
+    save_cvx_params(ys)
+    run_cvx()
+    print 'finished running cvx'
+
+    M = load_cvx_result()
