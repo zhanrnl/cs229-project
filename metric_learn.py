@@ -4,6 +4,8 @@ import copy
 from sessionparse import *
 from cvxopt import solvers, matrix, spdiag, lapack, spmatrix
 import cPickle
+import scipy.io
+import subprocess
 
 def mat_to_col_major_order(a):
     return a.reshape((a.size, 1), order='F')
@@ -23,8 +25,15 @@ def save_cvx_params(ys):
             cmat[i, j] = val
             cmat[j, i] = val
 
-    import scipy.io
     scipy.io.savemat('cmat.mat',{'cmat': cmat})
+
+def run_cvx():
+    subprocess.call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', 'try, sdp_solve, catch, exit, end, exit'])
+
+def load_cvx_result():
+    result = scipy.io.loadmat('result.mat')
+    M = result['M']
+    return M
 
 def recover_matrix_from_soln(x, index_dict_flip, n):
     xmat = np.zeros((n, n))
