@@ -6,8 +6,22 @@ import cPickle
 import time
 from multiprocessing import Pool
 import itertools
+from collections import defaultdict
 
 debug = False
+
+def get_durations():
+  d = defaultdict(int)
+  for i in range(6):
+    tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'\
+        .format(i), 'rb'))
+    print '{}: pickle loaded file {}'.format(time.ctime(), i)
+    for tune in tunes:
+      if 'parsed' in tune:
+        for bar in tune['parsed']:
+          for note in bar.notes:
+            d[note.dur] += 1
+  return d
 
 def load_pickled((i, d, n)):
     f_vecs = []
@@ -146,7 +160,6 @@ def a_b_classify_pca(n = 2, num_blocks = 6, n_components = 35):
     
 
 if __name__ == '__main__':
-  if debug:
-    a_b_classify(n = 2, num_blocks = 1)
-  else:
-    a_b_classify(n = 2, num_blocks = 6)
+  #d = get_durations()
+  #print d
+  a_b_classify(n = 2, num_blocks = 6)

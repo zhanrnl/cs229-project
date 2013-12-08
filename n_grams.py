@@ -102,10 +102,37 @@ def features_multibar_split(bars, n_gram_dict, n=3):
       num_slices += 1
   for i in range(8 - num_slices):
     f_vec.extend(features_from_list_of_bars([], n_gram_dict, n))
-  return f_vec
+  return np.array(f_vec)
 
-  #slice_len = int(len(bars) / 8)
-  #for i in range(8):
-    #f_vec.extend(features_from_list_of_bars(
-      #bars[(i*slice_len) : ((i+1)*slice_len)], n_gram_dict, n))
-  #return f_vec
+durations_dict = dict([(f, i) for (i, f) in enumerate(
+  [Fraction(1, 2),
+   Fraction(1, 1),
+   Fraction(2, 1),
+   Fraction(3, 1),
+   Fraction(4, 1),
+   Fraction(5, 1),
+   Fraction(6, 1),
+   Fraction(7, 1),
+   Fraction(8, 1),
+   Fraction(9, 1),
+   Fraction(12, 1),
+   Fraction(1, 3),
+   Fraction(1, 6),
+   Fraction(23, 1),
+   Fraction(3, 4),
+   Fraction(32, 1),
+   Fraction(3, 2),
+   Fraction(2, 3),
+   Fraction(7, 2),
+   Fraction(1, 8),
+   Fraction(4, 3),
+   Fraction(1, 4)])])
+def rhythm_features(bars):
+  features = np.zeros(len(durations_dict))
+  for bar in bars:
+    for note in bar.notes:
+      features[durations_dict[note.dur]] += 1
+  return features
+
+def double_feature_vec(bars, n_gram_dict, n=3):
+  return features_multibar_split(bars, n_gram_dict, n), rhythm_features(bars)
