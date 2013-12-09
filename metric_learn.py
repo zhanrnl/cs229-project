@@ -70,7 +70,9 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     d = build_feature_index_map(n)
 
     for i in xrange(num_blocks):
+        print "Loading pickle file {}... ".format(i)
         tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
+        print "  loaded."
 
         for tune in tunes:
             try:
