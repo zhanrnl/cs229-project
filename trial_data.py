@@ -1,6 +1,8 @@
 from sklearn.decomposition import PCA
 from metric_learn import *
 from sklearn.neighbors import BallTree, DistanceMetric
+import random
+import sys
 
 class TrialData(object):
     def __init__(self, pca_components=35, cross_validation_k=3, 
@@ -47,9 +49,12 @@ class TrialData(object):
     def run_single_trial(self, train_pairs, test_pairs):
         train_pairs_pca, test_pairs_pca = self.fit_pca(train_pairs, test_pairs)
         ys = ys_from_pairs(train_pairs_pca)
-        save_cvx_params(ys)
-        run_cvx()
-        M = load_cvx_result()
+
+        file_id = str(random.random())[2:]
+
+        save_cvx_params(ys, file_id)
+        run_cvx(file_id)
+        M = load_cvx_result(file_id)
         dist = DistanceMetric.get_metric('mahalanobis', VI = M)
         train_a_sections = [x[0] for x in train_pairs_pca]
         train_b_sections = [x[1] for x in train_pairs_pca]
@@ -121,7 +126,7 @@ top {}\% closest by the learned metric.""".format(self.cross_validation_k, self.
 
 
 if __name__ == '__main__':
-    pairs = build_a_b_pairs_vector(2, 6)
-    with outfile = open('trial_data.log', 'w'):
+    pairs = build_a_b_pairs_vector(2, 1)
+    with open('trial_data.log', 'w') as outfile:
         trial_data = TrialData(pca_components=35)
         trial_data.run_trial(pairs, outfile)

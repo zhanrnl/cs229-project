@@ -1,4 +1,4 @@
-load('cmat.mat')
+%load('cmat.mat')
 n = size(cmat, 1);
 
 assert(n <= 36);
@@ -13,4 +13,4 @@ cvx_begin sdp
         det_rootn(M) >= 1
 cvx_end
 
-save('result', 'M');
+%save('result', 'M');

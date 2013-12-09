@@ -16,7 +16,7 @@ def col_major_order_to_mat(a):
     n = int(round(np.sqrt(a.size)))
     return a.reshape((n, n), order='F')
 
-def save_cvx_params(ys):
+def save_cvx_params(ys, file_id):
     n, m = ys.shape
 
     cmat = np.zeros((n, n))
@@ -27,13 +27,17 @@ def save_cvx_params(ys):
             cmat[i, j] = val
             cmat[j, i] = val
 
-    scipy.io.savemat('cmat.mat',{'cmat': cmat})
+    filename = 'cmat_{0}.mat'.format(file_id)
+    scipy.io.savemat(filename,{'cmat': cmat})
 
-def run_cvx():
-    subprocess.call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', 'try, sdp_solve, catch, exit, end, exit'])
+def run_cvx(file_id):
+    infile = 'cmat_{}.mat'.format(file_id)
+    outfile = 'result_{}'.format(file_id)
 
-def load_cvx_result():
-    result = scipy.io.loadmat('result.mat')
+    subprocess.call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', "try, load('{}'), sdp_solve, save('{}','M'), catch, exit, end, exit".format(infile, outfile)])
+
+def load_cvx_result(file_id):
+    result = scipy.io.loadmat('result_{}.mat'.format(file_id))
     M = result['M']
     return M
 
