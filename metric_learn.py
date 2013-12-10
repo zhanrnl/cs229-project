@@ -1,4 +1,6 @@
 from n_grams import build_feature_index_map, features_from_list_of_bars
+from multiprocessing import Pool
+import time
 import numpy as np
 import copy
 from sessionparse import *
@@ -34,7 +36,7 @@ def run_cvx(file_id):
     infile = 'cmat_{}.mat'.format(file_id)
     outfile = 'result_{}'.format(file_id)
 
-    subprocess.call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', "try, load('{}'), sdp_solve, save('{}','M'), catch, exit, end, exit".format(infile, outfile)])
+    subprocess.check_call(['matlab', '-nodisplay', '-nosplash', '-nodesktop', '-r', "load('{}'), sdp_solve, save('{}','M'), exit".format(infile, outfile)])
 
 def load_cvx_result(file_id):
     result = scipy.io.loadmat('result_{}.mat'.format(file_id))
@@ -62,6 +64,25 @@ def ys_from_pairs(pairs):
 
     return x_np
 
+def load_pickled((i, d, n)):
+    tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'\
+        .format(i), 'rb'))
+    print '{}: pickle loaded file {}'.format(time.ctime(), i)
+
+    pairs = []
+    for tune in tunes:
+        if 'parsed' not in tune:
+          continue
+        try:
+          a, b = ab_split(tune)
+        except:
+          continue
+
+        a_sec = features_from_list_of_bars(a, d, n)
+        b_sec = features_from_list_of_bars(b, d, n)
+        pairs.append((a_sec, b_sec))
+    return pairs
+
 def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     ''' 
     Build feature vectors for each half of each tune    
@@ -69,92 +90,94 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     '''
     assert(num_blocks >= 1 and num_blocks <= 6)
 
-    pairs = list()
-
     d = build_feature_index_map(n)
 
-    for i in xrange(num_blocks):
-        print "Loading pickle file {}... ".format(i)
-        tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
-        print "  loaded."
+    pool = Pool()
+    mapresult = pool.map_async(load_pickled, [(i, d, n) for i in range(num_blocks)], 1)
+    pool.close()
+    pool.join()
+    return [pair for lst in mapresult.get() for pair in lst]
 
-        for tune in tunes:
-            try:
-                a, b = ab_split(tune)
-            except:
-                continue
+    #for i in xrange(num_blocks):
+        #print "Loading pickle file {}... ".format(i)
+        #tunes = cPickle.load(open('thesession-data/cpickled_parsed_{0}'.format(i), 'rb'))
+        #print "  loaded."
 
-            a_sec = features_from_list_of_bars(a, d, n)
-            b_sec = features_from_list_of_bars(b, d, n)
+        #for tune in tunes:
+            #try:
+                #a, b = ab_split(tune)
+            #except:
+                #continue
 
-            pairs.append((a_sec, b_sec))
+            #a_sec = features_from_list_of_bars(a, d, n)
+            #b_sec = features_from_list_of_bars(b, d, n)
 
-    return pairs
+            #pairs.append((a_sec, b_sec))
 
-def metric_learn(pairs_test, pairs_train, n_components = 35):
-    pca = PCA(n_components = n_components)
-    pca.fit(pairs_train_flat)
+#def metric_learn(pairs_test, pairs_train, n_components = 35):
+    #pca = PCA(n_components = n_components)
+    #pca.fit(pairs_train_flat)
 
-    pairs_flat = [item for subtuple in pairs for item in subtuple]
-    pairs_pca_flat = pca.transform(pairs_flat)
+    #pairs_flat = [item for subtuple in pairs for item in subtuple]
+    #pairs_pca_flat = pca.transform(pairs_flat)
     
-    pairs_pca = list()
-    for i in xrange(0, len(pairs_pca_flat), 2):
-        a = i 
-        b = i + 1
-        pairs_pca.append((pairs_pca_flat[a], pairs_pca_flat[b]))
+    #pairs_pca = list()
+    #for i in xrange(0, len(pairs_pca_flat), 2):
+        #a = i 
+        #b = i + 1
+        #pairs_pca.append((pairs_pca_flat[a], pairs_pca_flat[b]))
     
-    pairs_pca_train = pairs_pca[:n_train]
-    pairs_pca_test = pairs_pca[n_train:]
+    #pairs_pca_train = pairs_pca[:n_train]
+    #pairs_pca_test = pairs_pca[n_train:]
 
-    ys = ys_from_pairs(pairs_pca_train)
+    #ys = ys_from_pairs(pairs_pca_train)
 
-    save_cvx_params(ys)
-    run_cvx()
-    print 'finished running cvx'
+    #save_cvx_params(ys)
+    #run_cvx()
+    #print 'finished running cvx'
 
-    M = load_cvx_result()
+    #M = load_cvx_result()
 
-    return pairs_pca_train, pairs_pca_test, M
+    #return pairs_pca_train, pairs_pca_test, M
 
-def neighbors(n_components = 35, fraction = 0.10):
-    pairs_pca_train, pairs_pca_test, M = metric_learn(n_components)
+#def neighbors(n_components = 35, fraction = 0.10):
+    #pairs_pca_train, pairs_pca_test, M = metric_learn(n_components)
 
-    dist = DistanceMetric.get_metric('mahalanobis', VI = M)
+    #dist = DistanceMetric.get_metric('mahalanobis', VI = M)
 
-    a_sections = [x[0] for x in pairs_pca_test]
-    b_sections = [x[1] for x in pairs_pca_test]
+    #a_sections = [x[0] for x in pairs_pca_test]
+    #b_sections = [x[1] for x in pairs_pca_test]
 
-    a_sections_train = [x[0] for x in pairs_pca_train]
-    b_sections_train = [x[1] for x in pairs_pca_train]
+    #a_sections_train = [x[0] for x in pairs_pca_train]
+    #b_sections_train = [x[1] for x in pairs_pca_train]
     
-    bt = BallTree(a_sections, metric = dist)
-    bt_train = BallTree(a_sections_train, metric = dist)
-    bt_euc = BallTree(a_sections)
-    bt_euc_train = BallTree(a_sections_train)
+    #bt = BallTree(a_sections, metric = dist)
+    #bt_train = BallTree(a_sections_train, metric = dist)
+    #bt_euc = BallTree(a_sections)
+    #bt_euc_train = BallTree(a_sections_train)
 
-    top_fraction = int(len(b_sections) * fraction)
-    top_fraction_train = int(len(b_sections_train) * fraction)
+    #top_fraction = int(len(b_sections) * fraction)
+    #top_fraction_train = int(len(b_sections_train) * fraction)
 
-    res = bt.query(b_sections, top_fraction)
-    res_train = bt_train.query(b_sections_train, top_fraction_train)
-    res_euc = bt_euc.query(b_sections, top_fraction)
-    res_euc_train = bt_euc_train.query(b_sections_train, top_fraction_train)
+    #res = bt.query(b_sections, top_fraction)
+    #res_train = bt_train.query(b_sections_train, top_fraction_train)
+    #res_euc = bt_euc.query(b_sections, top_fraction)
+    #res_euc_train = bt_euc_train.query(b_sections_train, top_fraction_train)
 
-    c = 0
-    c_euc = 0
-    for i in xrange(len(b_sections)):
-        if i in res[1][i]:
-            c += 1
-        if i in res_euc[1][i]:
-            c_euc += 1
+    #c = 0
+    #c_euc = 0
+    #for i in xrange(len(b_sections)):
+        #if i in res[1][i]:
+            #c += 1
+        #if i in res_euc[1][i]:
+            #c_euc += 1
 
-    c_train = 0
-    c_euc_train = 0
-    for i in xrange(len(b_sections_train)):
-        if i in res_train[1][i]:
-            c_train += 1
-        if i in res_euc_train[1][i]:
-            c_euc_train += 1
+    #c_train = 0
+    #c_euc_train = 0
+    #for i in xrange(len(b_sections_train)):
+        #if i in res_train[1][i]:
+            #c_train += 1
+        #if i in res_euc_train[1][i]:
+            #c_euc_train += 1
 
-    return ((c, c_euc, len(b_sections)), (c_train, c_euc_train, len(b_sections_train)))
+    #return ((c, c_euc, len(b_sections)), (c_train, c_euc_train, len(b_sections_train)))

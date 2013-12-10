@@ -3,9 +3,10 @@ from metric_learn import *
 from sklearn.neighbors import BallTree, DistanceMetric
 import random
 import sys
+from multiprocessing import Pool
 
 class TrialData(object):
-    def __init__(self, pca_components=35, cross_validation_k=3, 
+    def __init__(self, pca_components=35, cross_validation_k=8, 
             correct_within_top_fraction=0.1, match_a_to_b=True):
         self.pca_components = pca_components
         self.cross_validation_k = cross_validation_k
@@ -37,12 +38,14 @@ class TrialData(object):
         for i in xrange(0, len(train_pairs_pca_flat), 2):
             a = i 
             b = i + 1
-            train_pairs_pca.append((train_pairs_pca_flat[a], train_pairs_pca_flat[b]))
+            train_pairs_pca.append((train_pairs_pca_flat[a],
+              train_pairs_pca_flat[b]))
 
         for i in xrange(0, len(test_pairs_pca_flat), 2):
             a = i 
             b = i + 1
-            test_pairs_pca.append((test_pairs_pca_flat[a], test_pairs_pca_flat[b]))
+            test_pairs_pca.append((test_pairs_pca_flat[a],
+              test_pairs_pca_flat[b]))
         
         return train_pairs_pca, test_pairs_pca
 
@@ -74,8 +77,8 @@ class TrialData(object):
         print "Constructing BallTrees..."
         train_bt = BallTree(train_to_match_sections, metric=dist)
         test_bt = BallTree(test_to_match_sections, metric=dist)
-        train_bt_euc = BallTree(train_to_match_sections)
-        test_bt_euc = BallTree(test_to_match_sections)
+        #train_bt_euc = BallTree(train_to_match_sections)
+        #test_bt_euc = BallTree(test_to_match_sections)
 
         train_top_fraction = int(len(train_given_sections) * self.correct_within_top_fraction)
         test_top_fraction = int(len(test_given_sections) * self.correct_within_top_fraction)
@@ -83,50 +86,97 @@ class TrialData(object):
         print "Querying the BallTrees..."
         train_result = train_bt.query(train_given_sections, train_top_fraction)
         test_result = test_bt.query(test_given_sections, test_top_fraction)
-        train_result_euc = train_bt_euc.query(train_given_sections, train_top_fraction)
-        test_result_euc = test_bt_euc.query(test_given_sections, test_top_fraction)
+        #train_result_euc = train_bt_euc.query(train_given_sections, train_top_fraction)
+        #test_result_euc = test_bt_euc.query(test_given_sections, test_top_fraction)
 
         print "Looking at correctness of results..."
         train_correct = sum([int(i in train_result[1][i]) for i in xrange(len(train_given_sections))])
         test_correct = sum([int(i in test_result[1][i]) for i in xrange(len(test_given_sections))])
-        train_correct_euc = sum([int(i in train_result_euc[1][i]) for i in xrange(len(train_given_sections))])
-        test_correct_euc = sum([int(i in test_result_euc[1][i]) for i in xrange(len(test_given_sections))])
+        #train_correct_euc = sum([int(i in train_result_euc[1][i]) for i in xrange(len(train_given_sections))])
+        #test_correct_euc = sum([int(i in test_result_euc[1][i]) for i in xrange(len(test_given_sections))])
 
-        return [[train_correct, train_correct_euc, len(train_given_sections)],
-            [test_correct, test_correct_euc, len(test_given_sections)]]
+        print "Finding indices of correct matches..."
+        test_result_full = test_bt.query(test_given_sections, len(test_given_sections))
+        bad_indices = [0]
+        def default_index(lst, i, bad_indices):
+          ind = -1
+          try:
+            ind = lst.index(i)
+          except:
+            bad_indices[0] += 1
+          return ind
+        test_indices = [default_index(list(test_result_full[1][i]), i, bad_indices) for i in xrange(len(test_given_sections))]
+        print bad_indices[0], "bad indices"
+        test_indices = [x for x in test_indices if x != -1]
 
-    def print_results(self, results, outfile=sys.stdout):
-        ((train_correct, train_correct_euc, num_train),
-            (test_correct, test_correct_euc, num_test)) = results
-        outfile.write("")
+        #return [[train_correct, train_correct_euc, len(train_given_sections)],
+            #[test_correct, test_correct_euc, len(test_given_sections)]], test_indices
+        return [[train_correct, len(train_given_sections)],
+            [test_correct, len(test_given_sections)]], test_indices
+
+    def print_results(self, results, indices, outfile=sys.stdout):
+        #((train_correct, train_correct_euc, num_train),
+            #(test_correct, test_correct_euc, num_test)) = results
+        ((train_correct, num_train),
+            (test_correct, num_test)) = results
         outfile.write( """Ran {}-fold cross validation with {} PCA'd components, matching {} sections
 to {} sections, and checking whether the corresponding section was in the
-top {}\% closest by the learned metric.""".format(self.cross_validation_k, self.pca_components,
-            'A' if self.match_a_to_b else 'B', 'B' if self.match_a_to_b else 'A',
-            self.correct_within_top_fraction * 100))
-        outfile.write("")
+top {}\% closest by the learned metric.
+
+"""\
+            .format(self.cross_validation_k, self.pca_components,
+              'A' if self.match_a_to_b else 'B', 'B' if self.match_a_to_b else 'A',
+              self.correct_within_top_fraction * 100))
         outfile.write( """ON THE TEST SET:
-{} correct by learned metric, {} correct by euclidean metric, {} total"""\
-            .format(test_correct, test_correct_euc, num_test))
-        outfile.write("")
+{} correct by learned metric, {} total
+
+"""\
+            .format(test_correct, num_test))
         outfile.write( """ON THE TRAINING SET:
-{} correct by learned metric, {} correct by euclidean metric, {} total"""\
-            .format(train_correct, train_correct_euc, num_train))
+{} correct by learned metric, {} total
+
+"""\
+            .format(train_correct, num_train))
+        #outfile.write( """ON THE TEST SET:
+#{} correct by learned metric, {} correct by euclidean metric, {} total
+
+#"""\
+            #.format(test_correct, test_correct_euc, num_test))
+        #outfile.write( """ON THE TRAINING SET:
+#{} correct by learned metric, {} correct by euclidean metric, {} total
+
+#"""\
+            #.format(train_correct, train_correct_euc, num_train))
+        outfile.write(str(indices))
+        outfile.write("\n")
 
     def run_trial(self, all_pairs, outfile=sys.stdout):
-        results = [[0,0,0], [0,0,0]]
-        for i in xrange(self.cross_validation_k):
-            print "Running the {}th cross validation trial...".format(i+1)
-            train, test = self.split_data(all_pairs, i)
-            single_results = self.run_single_trial(train, test)
-            for j in xrange(2):
-                for k in xrange(3):
-                    results[j][k] += single_results[j][k]
-        self.print_results(results, outfile)
+        #for i in xrange(self.cross_validation_k):
+        pool = Pool()
+        map_result = pool.map_async(single_trial, 
+            [(i, self, all_pairs) for i in xrange(self.cross_validation_k)], 1)
+        pool.close()
+        pool.join()
+        results_list = map_result.get()
+        results = [[0,0], [0,0]]
+        all_indices = []
+        for result, indices in results_list:
+          all_indices.extend(indices)
+          for j in xrange(2):
+            for k in xrange(2):
+              results[j][k] += result[j][k]
+        self.print_results(results, all_indices, outfile)
 
+def single_trial((i, trial_data, all_pairs)):
+  print "Running the {}th cross validation trial...".format(i+1)
+  train, test = trial_data.split_data(all_pairs, i)
+  return trial_data.run_single_trial(train, test)
+  #for j in xrange(2):
+      #for k in xrange(3):
+          #results[j][k] += single_results[j][k]
 
 if __name__ == '__main__':
-    pairs = build_a_b_pairs_vector(2, 1)
+    pairs = build_a_b_pairs_vector(2, 6)
     with open('trial_data.log', 'w') as outfile:
         trial_data = TrialData(pca_components=35)
         trial_data.run_trial(pairs, outfile)
