@@ -70,6 +70,7 @@ def load_pickled((i, d, n)):
     print '{}: pickle loaded file {}'.format(time.ctime(), i)
 
     pairs = []
+    tune_data = []
     for tune in tunes:
         if 'parsed' not in tune:
           continue
@@ -83,7 +84,8 @@ def load_pickled((i, d, n)):
         a_sec = double_feature_vec(a, d, n)
         b_sec = double_feature_vec(b, d, n)
         pairs.append((a_sec, b_sec))
-    return pairs
+        tune_data.append(tune)
+    return pairs, tune_data
 
 def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     ''' 
@@ -98,7 +100,9 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     mapresult = pool.map_async(load_pickled, [(i, d, n) for i in range(num_blocks)], 1)
     pool.close()
     pool.join()
-    return [pair for lst in mapresult.get() for pair in lst]
+    pairs = [pair for pair_lst, tune_data_lst in mapresult.get() for pair in pair_lst]
+    tune_data = [tune for pair_lst, tune_data_lst in mapresult.get() for tune in tune_data_lst]
+    return pairs, tune_data
 
     #for i in xrange(num_blocks):
         #print "Loading pickle file {}... ".format(i)
