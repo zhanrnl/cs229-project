@@ -131,7 +131,6 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     
     #pairs_pca_train = pairs_pca[:n_train]
     #pairs_pca_test = pairs_pca[n_train:]
-!w!,<Mouse>C!x!,<Mouse>C!y!,
     #ys = ys_from_pairs(pairs_pca_train)
 
     #save_cvx_params(ys)
