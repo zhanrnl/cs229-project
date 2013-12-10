@@ -49,6 +49,34 @@ class TrialData(object):
         
         return train_pairs_pca, test_pairs_pca
 
+    def get_full_metric(self, train_pairs):
+        train_pairs_flat = [item for subtuple in train_pairs for item in subtuple]
+        
+        pca = PCA(n_components = self.pca_components)
+        pca.fit(train_pairs_flat)
+
+        train_pairs_pca_flat = pca.transform(train_pairs_flat)
+
+        train_pairs_pca = list()
+
+        for i in xrange(0, len(train_pairs_pca_flat), 2):
+            a = i 
+            b = i + 1
+            train_pairs_pca.append((train_pairs_pca_flat[a],
+              train_pairs_pca_flat[b]))
+        
+        ys = ys_from_pairs(train_pairs_pca)
+
+        file_id = str(random.random())[2:]
+
+        save_cvx_params(ys, file_id)
+        run_cvx(file_id)
+        M = load_cvx_result(file_id)
+
+        dist = DistanceMetric.get_metric('mahalanobis', VI = M)
+
+        return dist
+
     def run_single_trial(self, train_pairs, test_pairs, train_tune_data, test_tune_data):
         print "Running PCA..."
         train_pairs_pca, test_pairs_pca = self.fit_pca(train_pairs, test_pairs)
