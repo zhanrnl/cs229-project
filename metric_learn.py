@@ -1,4 +1,4 @@
-from n_grams import build_feature_index_map, features_from_list_of_bars
+from n_grams import *
 import numpy as np
 import copy
 from sessionparse import *
@@ -84,8 +84,8 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
             except:
                 continue
             
-            a_sec = features_from_list_of_bars(a, d, n)
-            b_sec = features_from_list_of_bars(b, d, n)
+            a_sec = double_feature_vec(a, d, n)
+            b_sec = double_feature_vec(b, d, n)
 
             pairs.append((a_sec, b_sec))
 

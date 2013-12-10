@@ -126,7 +126,7 @@ top {}\% closest by the learned metric.""".format(self.cross_validation_k, self.
 
 
 if __name__ == '__main__':
-    pairs = build_a_b_pairs_vector(2, 1)
+    pairs = build_a_b_pairs_vector(2, 6)
     with open('trial_data.log', 'w') as outfile:
         trial_data = TrialData(pca_components=35)
         trial_data.run_trial(pairs, outfile)
