@@ -83,7 +83,7 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
                 a, b = ab_split(tune)
             except:
                 continue
-
+            
             a_sec = features_from_list_of_bars(a, d, n)
             b_sec = features_from_list_of_bars(b, d, n)
 

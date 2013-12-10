@@ -135,4 +135,4 @@ def rhythm_features(bars):
   return features
 
 def double_feature_vec(bars, n_gram_dict, n=3):
-  return features_multibar_split(bars, n_gram_dict, n), rhythm_features(bars)
+  return np.hstack((features_multibar_split(bars, n_gram_dict, n), rhythm_features(bars)))
