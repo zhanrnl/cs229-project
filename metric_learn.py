@@ -1,6 +1,6 @@
-from n_grams import build_feature_index_map, features_from_list_of_bars
 from multiprocessing import Pool
 import time
+from n_grams import *
 import numpy as np
 import copy
 from sessionparse import *
@@ -78,8 +78,10 @@ def load_pickled((i, d, n)):
         except:
           continue
 
-        a_sec = features_from_list_of_bars(a, d, n)
-        b_sec = features_from_list_of_bars(b, d, n)
+        #a_sec = features_from_list_of_bars(a, d, n)
+        #b_sec = features_from_list_of_bars(b, d, n)
+        a_sec = double_feature_vec(a, d, n)
+        b_sec = double_feature_vec(b, d, n)
         pairs.append((a_sec, b_sec))
     return pairs
 
@@ -129,7 +131,7 @@ def build_a_b_pairs_vector(n = 2, num_blocks = 6):
     
     #pairs_pca_train = pairs_pca[:n_train]
     #pairs_pca_test = pairs_pca[n_train:]
-
+!w!,<Mouse>C!x!,<Mouse>C!y!,
     #ys = ys_from_pairs(pairs_pca_train)
 
     #save_cvx_params(ys)
