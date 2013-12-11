@@ -1,5 +1,6 @@
 from sklearn.neighbors import DistanceMetric
 from sklearn.decomposition import PCA
+from sklearn.mixture import GMM
 from sessionparse import *
 import cPickle
 from n_grams import *
@@ -19,6 +20,7 @@ n = 2
 d = build_feature_index_map(n)
 metric = read_metric()
 pca = cPickle.load(open('pca_full', 'rb'))
+large_pca = cPickle.load(open('large_pca_full', 'rb'))
 
 def load_pickled((i, d, n)):
     f_vecs = []
@@ -41,7 +43,7 @@ def load_pickled((i, d, n)):
           num_not_split += 1
           continue
 
-        f_vecs.append(double_feature_vec(a, d, n))
+        #f_vecs.append(double_feature_vec(a, d, n))
         f_vecs.append(double_feature_vec(b, d, n))
         #f_vecs.append(features_multibar_split(a, d, n))
         #f_vecs.append(features_multibar_split(b, d, n))
@@ -57,8 +59,6 @@ def load_pickled((i, d, n)):
 def save_pcad_dataset():
     pool = Pool()
 
-    n = 2
-    d = build_feature_index_map(n)
     mapresult = pool.map_async(load_pickled, [(i, d, n) for i in range(6)], 1)
     pool.close()
     pool.join()
@@ -68,16 +68,20 @@ def save_pcad_dataset():
     for f_vec_file in results:
       for f_vec in f_vec_file:
         f_vecs.append(f_vec)
-    large_pca = PCA(n_components=100)
-    import pdb; pdb.set_trace()
+    large_pca = PCA(n_components=200)
     large_pca.fit(f_vecs)
+    with open('large_pca_full', 'w') as f:
+      cPickle.dump(large_pca, f)
+    f_vecs = large_pca.transform(f_vecs)
 
-    for i, f_vec in enumerate(f_vecs):
-      f_vecs[i] = large_pca.transform(f_vec)
-
-    with open('pcad_dataset', 'w') as f:
+    with open('pcad_b_dataset', 'w') as f:
       cPickle.dump(f_vecs, f)
 
+def fit_gmm():
+  dataset = cPickle.load(open('pcad_b_dataset', 'rb'))
+  g = GMM(1, covariance_type='full')
+  g.fit(dataset)
+  return g
 
 def get_cooleys():
     tunes = cPickle.load(open('thesession-data/cpickled_parsed_0', 'rb'))
@@ -122,13 +126,20 @@ def total_random(bars):
 
 def get_fvec(bars):
     return pca.transform(double_feature_vec(bars, d, n)).reshape((35, 1))
+def get_large_fvec(bars):
+    return large_pca.transform(double_feature_vec(bars, d, n)).reshape((200, 1))
 
-def iterative_step(a_fvec, curr_b, num_candidates = 10):
+def iterative_step(a_fvec, curr_b, g, num_candidates = 10):
     candidates = [random_alteration(curr_b) for i in xrange(num_candidates)]
     candidates.append(curr_b)
-    candidate_fvecs = [get_fvec(candidate) for candidate in candidates]
+    candidate_fvecs = [(get_fvec(candidate), get_large_fvec(candidate)) for candidate in candidates]
 
-    dists = [metric(a_fvec, b_fvec) for b_fvec in candidate_fvecs]
+    def score(b_fvec, b_large_fvec):
+      #print g.score(b_large_fvec.T)[0]
+      return metric(a_fvec, b_fvec) - 3.0 * g.score(b_large_fvec.T)[0]
+
+    #dists = [metric(a_fvec, b_fvec) for b_fvec in candidate_fvecs]
+    dists = [score(b_fvec, b_large_fvec) for (b_fvec, b_large_fvec) in candidate_fvecs]
     min_dist = min(dists)
 
     best_b = candidates[dists.index(min_dist)]
@@ -138,6 +149,7 @@ def iterative_step(a_fvec, curr_b, num_candidates = 10):
 
 def compose(tune, iters = 100, n_candidates = 10, seed = None):
     mode = tune['mode']
+    g = fit_gmm()
 
     a, b = ab_split(tune)
 
@@ -149,7 +161,7 @@ def compose(tune, iters = 100, n_candidates = 10, seed = None):
     curr_b = seed
 
     for i in xrange(iters):
-        curr_b, dist = iterative_step(a_fvec, curr_b, n_candidates)
+        curr_b, dist = iterative_step(a_fvec, curr_b, g, n_candidates)
         print 'iteration #{}/{}'.format(i+1, iters), 'dist: {}'.format(float(dist))
 
     return curr_b, seed
@@ -157,7 +169,7 @@ def compose(tune, iters = 100, n_candidates = 10, seed = None):
 def main():
     tune = get_cooleys()
     
-    b, orig_rand = compose(tune, 500, 50)
+    b, orig_rand = compose(tune, 100, 50)
 
     cPickle.dump((tune, b, orig_rand), open('tune_b_seed','wb'))
 
