@@ -1,0 +1,44 @@
+\documentclass[letterpaper]{amsart}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{vector}
+\usepackage{fullpage}
+\usepackage{enumerate}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+
+\begin{document}
+One goal of our project was to learn how the $A$ and $B$ sections of a particular tune are related.
+We attempted to learn a metric $\vectornorm{\cdot}$ such that if $x$ and $y$ are feature
+vectors corresponding to the $A$ and $B$ sections of the same tune, then $\vectornorm{x - y}$ should be small.
+One common such metric is the Mahalanobis distance metric, defined by
+$d(x,y) = \vectornorm{x-y}_M = \sqrt{(x-y)^T M (x-y)}$ for some positive semidefinite matrix $M$.
+
+Metric learning problems are typically formulated as such: given pairs of points $(x^{(i)}, x^{(j)}) \in \mathcal S$ that we want to be similar, and given pairs $(y^{(i)}, y^{(j)}) \in \mathcal D$ that should be dissimilar, solve the following problem for $M$:
+\[
+    \begin{array}{ll}
+        \text{minimize} & \sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
+        \text{subject to} & \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D} \vectornorm{y^{(i)} - y^{(j)}}_M^2\geq1\\
+        & M \succeq 0
+    \end{array}
+\]
+(for example, see \url{ai.stanford.edu/~ang/papers/nips02-metric.pdf}). In our problem, however, it is unclear how to specify dissimilar pairs of $A$ and $B$ sections.
+Without this dissimilarity constraint, the problem is trivially solved with $M = 0$.
+To avoid this issue we enforce $\det M = 1$, which in such a problem is implied by $(\det M)^{1/n} \geq 1$ (which for $n\times n$ matricies $M$ is a convex constraint).
+
+Given pairs $(x^{(k)}, y^{(k)})$ that correspond to the $A$ and $B$ sections of the $k$-th of $m$ tunes, the problem we solve is thus:
+\[
+    \begin{array}{ll}
+        \text{minimize} & \displaystyle{\sum_{k=1}^m \left( x^{(k)} - y^{(k)} \right)^T M \left( x^{(k)} - y^{(k)} \right)}\\
+        \text{subject to} & M \succeq 0 \\
+        & (\det M)^{1/n} \geq 1.
+\]
+
+\end{document}
