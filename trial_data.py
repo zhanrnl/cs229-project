@@ -75,7 +75,7 @@ class TrialData(object):
 
         dist = DistanceMetric.get_metric('mahalanobis', VI = M)
 
-        return dist
+        return dist, M, pca
 
     def run_single_trial(self, train_pairs, test_pairs, train_tune_data, test_tune_data):
         print "Running PCA..."
