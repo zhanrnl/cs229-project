@@ -1,0 +1,62 @@
+\documentclass[letterpaper]{amsart}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{vector}
+\usepackage{fullpage}
+\usepackage{enumerate}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\renewcommand*\familydefault{\sfdefault}
+
+\newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+
+\thispagestyle{empty}
+
+\setlength\parindent{0pt}
+\setlength\parskip{0.2in}
+
+\begin{document}
+\begin{center}
+\Huge
+Metric Learning
+\end{center}
+\huge
+Goal: learn how $A$ and $B$ sections of a particular tune are related.
+\begin{itemize}
+\item Learn a metric $d(x,y)$ so that if $x, y \in \mathbb R^n$ correspond to the $A$ and $B$ sections of a tune, $d(x,y)$ is small.
+
+\item Commonly used: the Mahalanobis metric, given by $d(x,y) = \vectornorm{x-y}_M = \sqrt{(x-y)^T M (x-y)}$ for $M$ positive semidefinite.
+
+\end{itemize}
+
+Such so-called ``metric learning'' problems usually also have pairs of points intended to be dissimilar, e.g. given pairs of similar points $(x^{(i)}, x^{(j)}) \in \mathcal S$ and pairs of dissimilar points $(y^{(i)}, y^{(j)}) \in \mathcal D$, solve the following problem for $M$:
+\[
+    \begin{array}{ll}
+        \text{minimize} & \sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
+        \text{subject to} & \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D} \vectornorm{y^{(i)} - y^{(j)}}_M^2\geq1\\
+        & M \succeq 0
+    \end{array}
+\]
+
+However, it is unclear how to specify dissimilar pairs of $A$ and $B$ sections.
+\begin{itemize}
+\item Without the dissimilarity constraint, the trivial solution is $M=0$.
+
+\item We add the convex constraint $(\det M)^{1/n} \geq 1$ which implies $\det M = 1$:
+\end{itemize}
+\[
+    \begin{array}{ll}
+        \text{minimize} & \displaystyle{\sum_{k=1}^m \vectornorm{x^{(k)} - y^{(k)}}_M^2} \\
+        \text{subject to} & M \succeq 0 \\
+        & (\det M)^{1/n} \geq 1.
+\]
+
+%\url{ai.stanford.edu/~ang/papers/nips02-metric.pdf}
+
+\end{document}
