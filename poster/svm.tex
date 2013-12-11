@@ -5,7 +5,6 @@
 \usepackage{amsthm}
 \usepackage{fullpage}
 \usepackage{enumerate}
-\usepackage{enumitem}
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{hyperref}
@@ -24,17 +23,20 @@
 \begin{document}
 \begin{center}
 \Huge
-Citations
+SVM
 \end{center}
 \huge
+Goal: distinguish between $A$ and $B$ sections.
 
-\begin{enumerate}[label={[\arabic*]}] \parskip=0.2in
-\item
-E. Xing, A. Ng, M. Jordan, and S. Russell. Distance Metric Learning, with
-Application to Clustering with Side-Information. \textit{NIPS}. 2002.
+\begin{itemize}
+\item We split each tune into its corresponding $A$ and $B$ sections, creating a
+labeled set of all $A$ and $B$ sections.
 
-\item The Session (\texttt{thesession.org}).
-\end{enumerate}
+\item We then run SVM with a Gaussian kernel with 8-fold cross-validation on
+this set.
+
+\item Vary the choice of feature vectors and number of PCA elements.
+\end{itemize}
 
 %\url{ai.stanford.edu/~ang/papers/nips02-metric.pdf}
 
