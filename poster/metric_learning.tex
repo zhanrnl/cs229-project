@@ -3,7 +3,6 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
-\usepackage{vector}
 \usepackage{fullpage}
 \usepackage{enumerate}
 \usepackage{url}
@@ -41,7 +40,7 @@ Such so-called ``metric learning'' problems usually also have pairs of points in
         \text{minimize} & \sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
         \text{subject to} & \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D} \vectornorm{y^{(i)} - y^{(j)}}_M^2\geq1\\
         & M \succeq 0
-    \end{array}
+    \end{array}\quad [1].
 \]
 
 However, it is unclear how to specify dissimilar pairs of $A$ and $B$ sections.
@@ -57,6 +56,16 @@ However, it is unclear how to specify dissimilar pairs of $A$ and $B$ sections.
         & (\det M)^{1/n} \geq 1.
 \]
 
-%\url{ai.stanford.edu/~ang/papers/nips02-metric.pdf}
+\newpage
+
+Measuring success of our learned metric:
+\begin{enumerate}
+\item We use 8-fold cross-validation: we separate our data into training and test sets 8 times.
+
+\item Fit a 35-component PCA model to our training set and, using this model, solve for a $35\times35$ $M$ (and therefore the metric $d(x,y)$).
+
+\item Match $B$ sections to given $A$ sections (or vice-versa): for each $A$ section in the training set, order all $B$ sections in the training set by distance from the $A$ section. Record the rank of the correct $B$ section (first is optimal).
+
+\end{enumerate}
 
 \end{document}
