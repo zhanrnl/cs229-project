@@ -1,0 +1,51 @@
+\documentclass[letterpaper]{amsart}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{vector}
+\usepackage{fullpage}
+\usepackage{enumerate}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\renewcommand*\familydefault{\sfdefault}
+
+\newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+
+\setlength\parindent{0pt}
+\setlength\parskip{0.2in}
+
+\thispagestyle{empty}
+
+\begin{document}
+\begin{center}
+\Huge
+Feature Selection
+\end{center}
+\huge
+
+Data set: melodies of Irish dance tunes (of varying length). How can we extract an informational feature vector with constant length over all tunes?
+\begin{itemize}
+\item An $n$-gram is an ordered list of (in our case) $n$ pitches of notes in a melody, ignoring accidentals.
+
+\item Initial features were counts of all 1- and 2-grams.
+
+\item Later, split melodies by measure into eighths and counted 1- and 2-grams separately for each measure.
+
+\item Finally, considered counts of notes of each length.
+\end{itemize}
+
+Steps taken to improve parsing robustness and quality:
+\begin{itemize}
+\item Unroll all repeat signs before further parsing.
+
+\item We consider only tunes with a number of bars in $\{16, 32, 64\}$: an individual $A$ or $B$ section usually has 8 or 16 measures, or 16 or 32 after unrolling repeat signs. We want to restrict to tunes that split evenly into two sections (e.g. not three sections, which could mean $ABC$, $ABA$, etc.).
+
+\item Decrease number of components via PCA to reduce possible bias and make metric learning computationally feasible.
+\end{itemize}
+
+\end{document}
