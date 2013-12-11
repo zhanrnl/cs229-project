@@ -1,0 +1,11 @@
+Ran 8-fold cross validation with 35 PCA'd components, matching A sections
+to B sections, and checking whether the corresponding section was in the
+top 10.0% closest by the learned metric.
+
+ON THE TEST SET:
+7241 correct by learned metric, 8942 total
+
+ON THE TRAINING SET:
+51109 correct by learned metric, 62594 total
+
+

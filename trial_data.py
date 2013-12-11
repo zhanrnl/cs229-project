@@ -110,7 +110,7 @@ class TrialData(object):
         return [[train_correct, len(train_given_sections)],
             [test_correct, len(test_given_sections)]], test_indices
 
-    def print_results(self, results, indices, outfile=sys.stdout):
+    def print_results(self, results, indices, outfile=sys.stdout, indices_outfile=sys.stdout):
         ((train_correct, num_train),
             (test_correct, num_test)) = results
         outfile.write( """Ran {}-fold cross validation with {} PCA'd components, matching {} sections
@@ -131,10 +131,11 @@ top {}% closest by the learned metric.
 
 """\
             .format(train_correct, num_train))
-        outfile.write(str(indices))
         outfile.write("\n")
+        indices_outfile.write(str(indices))
+        indices_outfile.write("\n")
 
-    def run_trial(self, all_pairs, tune_data, outfile=sys.stdout):
+    def run_trial(self, all_pairs, tune_data, outfile=sys.stdout, indices_outfile=sys.stdout):
         pool = Pool()
         #print len(all_pairs), len(tune_data)
         map_result = pool.map_async(single_trial, 
@@ -149,7 +150,7 @@ top {}% closest by the learned metric.
           for j in xrange(2):
             for k in xrange(2):
               results[j][k] += result[j][k]
-        self.print_results(results, all_indices, outfile)
+        self.print_results(results, all_indices, outfile, indices_outfile)
 
 def single_trial((i, trial_data, all_pairs, tune_data)):
   print "Running the {}th cross validation trial...".format(i+1)
@@ -159,7 +160,8 @@ def single_trial((i, trial_data, all_pairs, tune_data)):
 
 if __name__ == '__main__':
     pairs, tune_data = build_a_b_pairs_vector(2, 6)
-    
-    with open('trial_data.log', 'w') as outfile:
+
+    with open('trial_data.log_norhythm_btoa', 'w') as outfile:
+      with open('trial_data_indices_norhythm_btoa', 'w') as indices_outfile:
         trial_data = TrialData(pca_components=35)
-        trial_data.run_trial(pairs, tune_data, outfile)
+        trial_data.run_trial(pairs, tune_data, outfile, indices_outfile)

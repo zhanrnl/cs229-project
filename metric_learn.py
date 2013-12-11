@@ -81,8 +81,10 @@ def load_pickled((i, d, n)):
 
         #a_sec = features_from_list_of_bars(a, d, n)
         #b_sec = features_from_list_of_bars(b, d, n)
-        a_sec = double_feature_vec(a, d, n)
-        b_sec = double_feature_vec(b, d, n)
+        a_sec = features_multibar_split(a, d, n)
+        b_sec = features_multibar_split(b, d, n)
+        #a_sec = double_feature_vec(a, d, n)
+        #b_sec = double_feature_vec(b, d, n)
         pairs.append((a_sec, b_sec))
         tune_data.append(tune)
     return pairs, tune_data

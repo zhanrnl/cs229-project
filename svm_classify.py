@@ -47,9 +47,13 @@ def load_pickled((i, d, n)):
           num_not_split += 1
           continue
 
-        f_vecs.append(double_feature_vec(a, d, n))
+        #f_vecs.append(double_feature_vec(a, d, n))
+        #f_vecs.append(double_feature_vec(b, d, n))
+        f_vecs.append(features_multibar_split(a, d, n))
+        f_vecs.append(features_multibar_split(b, d, n))
+        #f_vecs.append(features_from_list_of_bars(a, d, n))
+        #f_vecs.append(features_from_list_of_bars(b, d, n))
         types.append(0)
-        f_vecs.append(double_feature_vec(b, d, n))
         types.append(1)
 
     print '{} tunes successfully split, {} did not split, {} '\
@@ -145,7 +149,7 @@ if __name__ == '__main__':
   print '{0}: Building feature vectors'.format(time.ctime())
   f_vecs, types = build_a_b_features_labels(n = 2, num_blocks = 6)
 
-  for n_components in [3, 5, 10, 20, 35]:
+  for n_components in [5, 10, 20, 30, 40, 60]:
     print "Classifying with {} components in PCA".format(n_components)
     splits = []
     k = 8
@@ -162,21 +166,9 @@ if __name__ == '__main__':
     train_confuse_sum = np.zeros((2, 2))
     test_confuse_sum = np.zeros((2, 2))
     for train_confuse, test_confuse in result:
-      #print train_confuse
-      #print test_confuse
-      #print type(train_confuse)
-      #print type(test_confuse)
-      #print str(train_confuse)
-      #print str(test_confuse)
       train_confuse_sum = train_confuse_sum + train_confuse
       test_confuse_sum = test_confuse_sum + test_confuse
-    #print train_confuse_sum
-    #print test_confuse_sum
-    #print type(train_confuse_sum)
-    #print type(test_confuse_sum)
-    #print str(train_confuse_sum)
-    #print str(test_confuse_sum)
-    with open("svm_result_{}".format(n_components), 'w') as f:
+    with open("svm_result_norhythm_{}".format(n_components), 'w') as f:
       f.write(str(train_confuse_sum))
       f.write('\n')
       f.write(str(test_confuse_sum))
