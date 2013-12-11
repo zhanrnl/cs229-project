@@ -4,19 +4,23 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{vector}
-%\usepackage{fullpage}
+\usepackage{fullpage}
 \usepackage{enumerate}
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{hyperref}
+
+\renewcommand*\familydefault{\sfdefault}
 
 \newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\abs}[1]{\left\lvert#1\right\rvert}
 \newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
 
 \setlength\parindent{0pt}
+\setlength\parskip{0.2in}
 
 \begin{document}
+\huge
 Goal: learn how $A$ and $B$ sections of a particular tune are related.
 \begin{itemize}
 \item Learn a metric $d(x,y)$ so that if $x, y \in \mathbb R^n$ correspond to the $A$ and $B$ sections of a tune, $d(x,y)$ is small.
