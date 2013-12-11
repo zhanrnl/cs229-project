@@ -3,7 +3,7 @@ from matplotlib.ticker import FuncFormatter
 
 plt.figure()
 fig, sp = plt.subplots(2, sharex=True)
-fig.set_size_inches(7,8)
+fig.set_size_inches(7,10)
 plt.subplots_adjust(top=0.85,left=0.16)
 
 cmap = plt.get_cmap('YlGn')
