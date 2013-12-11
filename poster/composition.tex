@@ -1,24 +1,25 @@
 \documentclass[letterpaper]{amsart}
 
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{fullpage}
-\usepackage{enumerate}
-\usepackage{url}
-\usepackage{graphicx}
-\usepackage{hyperref}
-
-\renewcommand*\familydefault{\sfdefault}
-
-\newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
-\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
-\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
-
-\thispagestyle{empty}
-
-\setlength\parindent{0pt}
-\setlength\parskip{0.2in}
+\usepackage{poster_package}
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{amsthm}
+%\usepackage{fullpage}
+%\usepackage{enumerate}
+%\usepackage{url}
+%\usepackage{graphicx}
+%\usepackage{hyperref}
+%
+%\renewcommand*\familydefault{\sfdefault}
+%
+%\newcommand{\vectornorm}[1]{\left\lVert#1\right\rVert}
+%\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+%\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+%
+%\thispagestyle{empty}
+%
+%\setlength\parindent{0pt}
+%\setlength\parskip{0.2in}
 
 \begin{document}
 \begin{center}
@@ -29,11 +30,10 @@ Composition
 Goal: compose a $B$ section matching a given $A$ section.
 
 We ran the following algorithm, utilizing our metric:
-\begin{enumerate}[1.]\parskip=0.05in
+\begin{enumerate}[label={\arabic*.}]
 \item Select a specific tune, and split it into its $A$ and $B$ sections.
 
-\item Randomize a $B$ section ($b_{cur}$) based on the rhythm of the $A$
-section.
+\item Randomize a $B$ section ($b_{cur}$) using the rhythm of the $A$ section.
 
 \item Repeat $n$ times:
 \begin{itemize}\parskip=0.05in
