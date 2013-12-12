@@ -127,14 +127,13 @@ Usually, in metric learning, one learns a metric by supplying both pairs of
 points $(\xip, \xjp) \in \mathcal{S}$ that are similar and should have small
 distance, and points $(\yip, \yjp) \in \mathcal{D}$ that are dissimilar and
 should have large distance. We then solve the following optimization problem for
-$M$: %TODO: Citation
+$M$ (from \cite{metricNg}):
 \begin{align*} 
 \text{minimize: } &
 \sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
 \text{subject to: }
 & \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D}
-	\vectornorm{y^{(i)} - y^{(j)}}_M^2 \ge 1,
-\quad\quad\quad\quad\quad\quad \cite{metricNg} \\
+	\vectornorm{y^{(i)} - y^{(j)}}_M^2 \ge 1, \\
 & M \succeq 0.
 \end{align*} 
 However, in our problem, it is unclear how to select pairs of $A$ and $B$
