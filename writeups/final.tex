@@ -1,6 +1,11 @@
 \documentclass{article} % For LaTeX2e
 \usepackage{nips13submit_e,times}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{comment}
 \usepackage{hyperref}
+\usepackage{enumerate}
+\usepackage{enumitem}
 \usepackage{cleveref}
 \usepackage{graphicx}
 \usepackage{url}
@@ -25,6 +30,14 @@
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
+\newcommand{\xip}{x^{(i)}}
+\newcommand{\xjp}{x^{(j)}}
+\newcommand{\xkp}{x^{(k)}}
+\newcommand{\yip}{y^{(i)}}
+\newcommand{\yjp}{y^{(j)}}
+\newcommand{\ykp}{y^{(k)}}
+\newcommand{\vectornorm}[1]{\left\| #1 \right\|}
+
 \nipsfinalcopy % Uncomment for camera-ready version
 
 \begin{document}
@@ -32,90 +45,201 @@
 \maketitle
 
 \section{Introduction}
-Most folk dance music contains two musical themes; the tune begins with one
-musical theme which is usually repeated, then progresses to another theme with
-similar musical structure and motives, which is usually also repeated. The first
-section is typically called the $A$ section while the second is called the $B$
-section. Our goal is to understand, at a quantitative level, the relationship
-between $A$ sections and $B$ sections. In the long term, for example, we want to
-be able to, given an $A$ section, automatically generate a musically appropriate
-$B$ section.
+Most Irish traditional folk dance music contains two musical themes; the tune
+begins with one musical theme which is usually repeated, then progresses to
+another theme with similar musical structure and motives, which is usually also
+repeated. The first section is typically called the $A$ section while the second
+is called the $B$ section. Our goal is to understand, at a quantitative level,
+the relationship between $A$ sections and $B$ sections.
 
 In working towards this goal, we need to understand both the relationship
-between the $A$ and $B$ section of a given folk song as well as the differences
-between $A$ and $B$ sections of such music in general. 
+between the $A$ and $B$ sections of a given folk song as well as the differences
+between $A$ and $B$ sections of such music in general. In the long term we wish
+to, given an $A$ section, automatically generate a musically appropriate $B$
+section.
 
 \section{Dataset}
 
+%TODO: Citations.
 We are using the tunes dataset from The Session (\texttt{thesession.org}). The
 Session is an online community of people who are interested in playing Irish
 folk music and cataloguing traditional Irish tunes for others to learn. These
 tunes include various dance forms, such as jigs, reels, waltzes, and slides.
-Available on their website is a set of roughly 21 thousand dance tune settings
+Available on their website is a set of roughly 21,000 dance tune settings
 in ABC notation, a human-readable symbolic music data format in plain text. The
 ABC files are easily parsed and manipulated symbolically for feature extraction.
-\FloatBarrier
-\begin{figure}[t]
-  \begin{center}
-  \begin{BVerbatim}
-X: 1
-T: Drowsy Maggie
-R: reel
-M: 4/4
-L: 1/8
-K:Edor
-|:E2BE dEBE|E2BE AFDF|E2BE dEBE|BABc dAFD:|
-K:D
-d2fd c2ec|defg afge|d2fd c2ec|BABc dAFA|
-d2fd c2ec|defg afge|afge fdec|BABc dAFD|
-  \end{BVerbatim}
-  \end{center}
-  \caption{\textit{Drowsy Maggie}, an example of a tune in ABC notation from
-  \texttt{thesession.org}.}
-\end{figure}
-
-\begin{figure}[t]
-  \begin{center}
-    \includegraphics[width=5in]{drowsymaggie.png}
-  \end{center}
-  \caption{A rendering of \textit{Drowsy Maggie} in standard musical notation, for
-  comparison with ABC notation. The $A$ section of this tune can be seen in the
-first line, while the $B$ section spans the second and third lines. The $A$ and
-$B$ sections are the same length since the first four bars are repeated---both
-are eight bars long when performed. Note that this tune, like many others, has
-four-bar phrases, which supports the heuristic we are using for splitting into
-$A$ and $B$ sections.}
-  \label{fig:drowsymusic}
-\end{figure}
-%\FloatBarrier
 
 \section{Feature Extraction}
 
-%We first use an ABC parser to turn the tunes in ABC notation into manipulable
-%datatypes of bars and notes. For feature extraction, we count frequencies of
-%$n$-grams of note pitches up to $n=3$, which gives information about the
-%characteristic pitch contours of the individual tunes.
-%
-%We are not currently using rhythm information of notes, nor are we considering
-%the particular octave or accidental inflection of pitches. This is a very basic
-%feature extraction scheme and we hope to extend our feature extraction soon to
-%include this other information, which may be useful in improving accuracy of our
-%classifiers.
-%
-%For our work with $A$ and $B$ section classification and matching, we use a
-%simple heuristic to split tunes into $A$ and $B$ sections as they are not
-%explicitly labelled in the data set. We first unfold all symbolic repeats in the
-%original tune, taking into consideration 1st and 2nd endings which very commonly
-%appear at the end of both $A$ and $B$ sections. This produces continuous streams
-%of music that are more easily analyzed, and reflect the structure of the tune as
-%it sounds when performed, rather than how it appears in notation.
-%
-%Then, if the tune has a number of bars that is a multiple of 4, we split the
-%tune evenly in half. This is an imprecise heuristic, but should work well in
-%practice because $A$ and $B$ sections generally have the same number of bars as
-%they most commonly have parallel musical structure, and also because these
-%traditional tunes most commonly have 4-bar phrases within $A$ and $B$ sections.
-%See \cref{fig:drowsymusic} for an example.
-%
+First we select from our dataset tunes which have an $A$ and a $B$ section. We
+consider only tunes with a number of bars in $\{16, 32, 64\}$: an individual $A$
+or $B$ section usually has 8 or 16 measures, or 16 or 32 after unrolling repeat
+signs. We want to restrict to tunes that split evenly into two sections (e.g.
+not three sections, which could mean $ABC$, $ABA$, etc.).
+
+After splitting tunes into $A$ and $B$ sections, we turn our attention to
+feature extraction.  Our dataset is loosely in the form of sequences of pitches
+representing melodies. However, as tunes may have different lengths, we need to
+generate a feature vector of fixed length.
+
+We define an $n$-gram as an ordered list of (in our case) $n$ pitches of notes
+in a melody, ignoring accidentals. In total, we created three different feature
+vectors.
+\begin{enumerate}
+%TODO: consider using nouns instead of verbs.
+\item Record counts of all 1- and 2-grams.
+
+\item Split melodies by measure into eighths and store counts of all 1- and
+2-grams separately for each measure.
+
+\item Use the features from (2), also adding counts of notes of each length.
+\end{enumerate}
+
+Since these feature vectors have nearly 2,000 components, before further
+processing, we used PCA to reduce the number of components. This helped us
+understand, to some extent, the bias caused by overfitting (as we will see
+later), as well as made metric learning computationally more feasible.
+
+\section{SVM Classifier}
+Using our labeled pool of $A$ and $B$ sections, we used an SVM with Gaussian
+kernel to attempt to classify a given segment of a tune as an $A$ section or a
+$B$ section. We used 8-fold cross-validation, and experimented with our three
+different feature vectors and various numbers of PCA components.
+
+%TODO: (Lennart) Check the graph (re-run). You are responsible for updating this
+%section of the paper.
+
+\begin{figure}
+\includegraphics[width=5in]{../svm_results/svm.pdf}
+%TODO: Add caption
+%TODO: Add labels
+\end{figure}
+
+Observe that when we use the more complex feature vectors, training performance
+improves, but test performance suffers. We attribute this to overfitting;
+namely, as our feature vectors become more descriptive, the SVM identifies
+particular patterns present only in the training data.
+
+\section{Metric Learning Problem Formulation}
+We also want to learn what makes the $A$ and $B$ sections of a particular tune
+musically related. We attempt to learn a metric $d(x, y)$ where, if $x, y \in
+\mathbb{R}^n$ are the feature vectors corresponding to the $A$ and $B$ sections
+of a tune, $d(x, y)$ should be small. For this task, we use the Mahalanobis
+metric, given by
+\[
+d(x,y) = \vectornorm{x-y}_M = \sqrt{(x-y)^T M (x-y)}
+\] 
+for $M \in \mathbb{R}^{n\times n}$ positive semidefinite, and attempt to learn a
+suitable value of $M$.
+
+Usually, in metric learning, one learns a metric by supplying both pairs of
+points $(\xip, \xjp) \in \mathcal{S}$ that are similar and should have small
+distance, and points $(\yip, \yjp) \in \mathcal{D}$ that are dissimilar and
+should have large distance. We then solve the following optimization problem for
+$M$: %TODO: Citation
+\begin{align*} 
+\text{minimize: } &
+\sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
+\text{subject to: }
+& \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D}
+	\vectornorm{y^{(i)} - y^{(j)}}_M^2 \ge 1 \\
+& M \succeq 0.
+\end{align*} 
+However, in our problem, it is unclear how to select pairs of $A$ and $B$
+sections that are dissimilar. Intuitively, one might argue that the $A$ and $B$
+sections of different tunes should be dissimilar. However, two arbitrary tunes
+may be variations of each other, and hence have $A$ and $B$ sections that are
+related.
+
+Note that by simply removing the dissimilarity constraint results in an
+optimization problem whose optimal value $M$ is the zero matrix. Instead, we
+enforce $\det M = 1$ as a reasonable-seeming regularity constraint. We do this
+by noting that $(\det M)^{1/n}$ is concave and so $(\det M)^{1/n} \ge 1$ is a
+convex constraint. Then, the optimization problem,
+
+\begin{align*} 
+\text{minimize: } & \sum_{k=1}^m \vectornorm{x^{(k)} - y^{(k)}}_M^2 \\
+\text{subject to: }
+& M \succeq 0 \\
+& (\det M)^{1/n} \ge 1,
+\end{align*} 
+where $m$ is the number of training examples, produces $M$ with $\det M = 1$, as
+the objective function scales with the determinant of $M$.
+
+\section{Metric Learning Results}
+
+After using PCA to reduce our feature vectors to $n = 35$ components, we applied
+this method using 8-fold cross-validation to learn such a metric $d$. To
+evaluate the success of our metric, we consider the following problem:
+\begin{itemize}
+\item[] Split apart the $A$ and $B$ sections of our test data ($\approx 1000$
+tunes). For each $A$ section, order all the $B$ sections by increasing distance
+from this $A$ section (under the metric $d$). Record the rank in this list of
+the actual corresponding $B$ section. Ideally, the actual $B$ section would be
+the first element of this list, closest to this $A$ section. Alternatively, we
+could match an $A$ section to a given $B$ section.
+\end{itemize}
+We made a cumulative histogram of the ranks of the actual sections.%TODO: See Figure
+We also broke down the frequency of these ranks into a pie chart. %TODO: Fig
+If we were to randomly guess the closest $B$ section, we would expect the rank
+of the correct $B$ section to be 1 with probability 0.1\%. In our results, the
+correct $B$ section was the first ranking option 37\% of the time. Moreover, the
+correct $B$ section was in the top 10\% of the ranking 93\% of the time. We
+conclude that there is a significant amount of information shared between $A$
+sections and $B$ sections.
+%TODO: caption and labels and resize
+\begin{figure}
+\begin{center}
+\includegraphics[width=2.5in]{../trial_data_logs/hists.pdf}
+\includegraphics[width=2.5in]{../trial_data_logs/pie.pdf}
+\end{center}
+\end{figure}
+
+\section{Composition}
+Now that we have shown the viability of our metric, we can use it to try to,
+given an $A$ section, compose a musically related $B$ section. We employed a
+simple algorithm:
+\begin{enumerate}
+\item Select a specific tune, and split it into its $A$ and $B$ sections.
+
+\item Randomize a $B$ section ($b_{cur}$) using the rhythm of the $A$ section.
+
+\item Repeat $n$ times:
+\begin{itemize}\parskip=0.05in
+\item[] For every $i \in \{1, \dots, k\}$:
+\begin{itemize}
+\item[] Generate $b_i$ by randomly making pitch edits to $b_{cur}$.
+\end{itemize}
+\item[] Set
+$\displaystyle{b_{cur} := \arg \min_{b_i} \  d(b_i, A)}$.
+\end{itemize}
+\end{enumerate}
+As an example, we tried to compose a new $B$ section for the $A$ section of the
+tune Cooley's Reel. %TODO (Lennart) Add music and figure.
+
+While the resulting $B$ section is musically far from ideal, it is notably
+better than the random starting $B$ section. For example, the starting note is
+the same as that of the tune and the intervals between consecutive notes are, on
+average, smaller.
+
+\section{Further Work}
+%TODO: Lennart
+
+\section{References}
+\begin{enumerate}[label={[\arabic*]}]
+\item The Session (\texttt{thesession.org}).
+
+\item
+E. Xing, A. Ng, M. Jordan, and S. Russell. Distance Metric Learning, with
+Application to Clustering with Side-Information. \textit{NIPS}. 2002.
+
+\item CVX
+
+\item Scikit Learn
+
+\item Boyd's Course Notes
+
+\item CVX User Guide
+\end{enumerate}
 
 \end{document}
