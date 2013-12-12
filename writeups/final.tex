@@ -19,14 +19,6 @@
 
 \author{Matthew Staib, Lennart Jansson, and Edward Dai}
 
-% The \author macro works with any number of authors. There are two commands
-% used to separate the names and addresses of multiple authors: \And and \AND.
-%
-% Using \And between authors leaves it to \LaTeX{} to determine where to break
-% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
-% puts 3 of 4 authors names on the first line, and the last on the second
-% line, try using \AND instead of \And before the third author name.
-
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
@@ -60,8 +52,7 @@ section.
 
 \section{Dataset}
 
-%TODO: Citations.
-We are using the tunes dataset from The Session (\texttt{thesession.org}). The
+We are using the tunes dataset from The Session \cite{thesession}. The
 Session is an online community of people who are interested in playing Irish
 folk music and cataloguing traditional Irish tunes for others to learn. These
 tunes include various dance forms, such as jigs, reels, waltzes, and slides.
@@ -142,7 +133,8 @@ $M$: %TODO: Citation
 \sum_{(x^{(i)}, x^{(j)}) \in \mathcal S} \vectornorm{x^{(i)} - x^{(j)}}_M^2 \\
 \text{subject to: }
 & \sum_{(y^{(i)}, y^{(j)}) \in \mathcal D}
-	\vectornorm{y^{(i)} - y^{(j)}}_M^2 \ge 1 \\
+	\vectornorm{y^{(i)} - y^{(j)}}_M^2 \ge 1,
+\quad\quad\quad\quad\quad\quad \cite{metricNg} \\
 & M \succeq 0.
 \end{align*} 
 However, in our problem, it is unclear how to select pairs of $A$ and $B$
@@ -160,7 +152,7 @@ convex constraint. Then, the optimization problem,
 \begin{align*} 
 \text{minimize: } & \sum_{k=1}^m \vectornorm{x^{(k)} - y^{(k)}}_M^2 \\
 \text{subject to: }
-& M \succeq 0 \\
+& M \succeq 0, \\
 & (\det M)^{1/n} \ge 1,
 \end{align*} 
 where $m$ is the number of training examples, produces $M$ with $\det M = 1$, as
@@ -225,21 +217,29 @@ average, smaller.
 \section{Further Work}
 %TODO: Lennart
 
-\section{References}
-\begin{enumerate}[label={[\arabic*]}]
-\item The Session (\texttt{thesession.org}).
 
-\item
+
+%I gave up. We're using this instead of the BibTex database. (ED)
+%Format is "\bibitem{cite_key} bibliographic information ...."
+%Cite using \cite{cite_key}.
+\begin{thebibliography}{9}
+
+\bibitem{thesession} 
+The Session (\texttt{thesession.org}).
+
+\bibitem{metricNg} 
 E. Xing, A. Ng, M. Jordan, and S. Russell. Distance Metric Learning, with
 Application to Clustering with Side-Information. \textit{NIPS}. 2002.
 
-\item CVX
-
-\item Scikit Learn
-
-\item Boyd's Course Notes
-
-\item CVX User Guide
-\end{enumerate}
+%TODO: Finish the references
+%
+%\item CVX
+%
+%\item Scikit Learn
+%
+%\item Boyd's Course Notes
+%
+%\item CVX User Guide
+\end{thebibliography}
 
 \end{document}
