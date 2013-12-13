@@ -95,7 +95,8 @@ later), as well as made metric learning computationally more feasible.
 Using our labeled pool of $A$ and $B$ sections, we used an SVM with Gaussian
 kernel to attempt to classify a given segment of a tune as an $A$ section or a
 $B$ section. We used 8-fold cross-validation, and experimented with our three
-different feature vectors and various numbers of PCA components.
+different feature vectors and various numbers of PCA components. To train the
+SVM, we used the relevant Scikit-learn libraries \cite{sklearn}.
 
 %TODO: (Lennart) Check the graph (re-run). You are responsible for updating this
 %section of the paper.
@@ -145,8 +146,9 @@ related.
 Note that by simply removing the dissimilarity constraint results in an
 optimization problem whose optimal value $M$ is the zero matrix. Instead, we
 enforce $\det M = 1$ as a reasonable-seeming regularity constraint. We do this
-by noting that $(\det M)^{1/n}$ is concave and so $(\det M)^{1/n} \ge 1$ is a
-convex constraint. Then, the optimization problem,
+by noting that $\det M$ is concave and so 
+$(\det M)^{1/n} \ge 1 \Leftrightarrow \det M \geq 1$ is a
+convex constraint \cite{boyd}. Then, the optimization problem,
 
 \begin{align*} 
 \text{minimize: } & \sum_{k=1}^m \vectornorm{x^{(k)} - y^{(k)}}_M^2 \\
@@ -157,11 +159,12 @@ convex constraint. Then, the optimization problem,
 where $m$ is the number of training examples, produces $M$ with $\det M = 1$, as
 the objective function scales with the determinant of $M$.
 
-\section{Metric Learning Results}
+\section{Metric Learning Implementation and Results}
 
 After using PCA to reduce our feature vectors to $n = 35$ components, we applied
-this method using 8-fold cross-validation to learn such a metric $d$. To
-evaluate the success of our metric, we consider the following problem:
+this method using 8-fold cross-validation to learn such a metric $d$. We used
+CVX to solve the optimization problem that determines $M$ \cite{cvx}.
+To evaluate the success of our metric, we consider the following problem:
 \begin{itemize}
 \item[] Split apart the $A$ and $B$ sections of our test data ($\approx 1000$
 tunes). For each $A$ section, order all the $B$ sections by increasing distance
@@ -221,7 +224,20 @@ average, smaller.
 %I gave up. We're using this instead of the BibTex database. (ED)
 %Format is "\bibitem{cite_key} bibliographic information ...."
 %Cite using \cite{cite_key}.
+%Make sure that these are all used and look decent.
 \begin{thebibliography}{9}
+
+\bibitem{boyd}
+S. Boyd and L. Vandenberghe, \textit{Convex Optimization}, Cambridge University
+Press, 2004.
+
+\bibitem{cvx}
+M. Grant and S. Boyd. CVX: Matlab software for disciplined convex
+programming, version 2.0 beta. \texttt{http://cvxr.com/cvx}, September 2013.
+
+\bibitem{sklearn}
+F. Pedregosa et al. Scikit-learn: Machine learning in Python. 
+\textit{Journal of Machine Learning Research}, \textbf{12}, 2825-2830.
 
 \bibitem{thesession} 
 The Session (\texttt{thesession.org}).
@@ -230,15 +246,6 @@ The Session (\texttt{thesession.org}).
 E. Xing, A. Ng, M. Jordan, and S. Russell. Distance Metric Learning, with
 Application to Clustering with Side-Information. \textit{NIPS}. 2002.
 
-%TODO: Finish the references
-%
-%\item CVX
-%
-%\item Scikit Learn
-%
-%\item Boyd's Course Notes
-%
-%\item CVX User Guide
 \end{thebibliography}
 
 \end{document}
