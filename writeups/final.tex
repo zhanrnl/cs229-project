@@ -217,9 +217,29 @@ the same as that of the tune and the intervals between consecutive notes are, on
 average, smaller.
 
 \section{Further Work}
-%TODO: Lennart
+At a broad level, all the work we have done could be improved by better feature
+selection. Given the complexities of music, 1- and 2-grams are far from ideal
+features. At the very least, we could store counts of 3- or 4- (or more) grams,
+or subsets of these, thus encapsulating more of what a melody looks like on a
+larger scale. There are other obvious musical features that we have not looked
+into using, for example, time and key signatures. Even more musically-complex
+features may prove fruitful, for example, based on the notes in the melody at
+each point in time we could infer the chord progression. There is a lot left
+to explore in this regard.
 
+As for improvements specific to our automated composition, one idea is to
+use our dataset to construct a model for the likelihood that a given sequence
+of pitches is musically significant. At the moment we are easily able to
+``converge'' to a $B$ section that, with respect to our learned metric, is
+actually closer to the given $A$ section than the actual $B$ section of the
+tune is. We produce a sequence of pitches that is similar to the $A$ section
+but that, when viewed independently of this $A$ section, still seems musically
+``unlikely.'' It is does not seem unreasonable, for example, that we could
+learn from our set of tunes that smaller intervals between notes are much more
+likely than large ones.
 
+In short, while we believe we have made significant progress, there is no
+shortage of future work to be done.
 
 %I gave up. We're using this instead of the BibTex database. (ED)
 %Format is "\bibitem{cite_key} bibliographic information ...."
