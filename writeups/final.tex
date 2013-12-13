@@ -42,12 +42,12 @@ begins with one musical theme which is usually repeated, then progresses to
 another theme with similar musical structure and motives, which is usually also
 repeated. The first section is typically called the $A$ section while the second
 is called the $B$ section. Our goal is to understand, at a quantitative level,
-the relationship between $A$ sections and $B$ sections. See \cref{origtune} for
-an example.
+the musical relationship between $A$ sections and $B$ sections. See
+\cref{origtune} for an example.
 
 In working towards this goal, we need to understand both the relationship
 between the $A$ and $B$ sections of a given folk song as well as the differences
-between $A$ and $B$ sections of such music in general. In the long term we wish
+between $A$ and $B$ sections of the tunes in general. In the long term we wish
 to, given an $A$ section, automatically generate a musically appropriate $B$
 section.
 
@@ -208,6 +208,10 @@ where $m$ is the number of training examples, produces $M$ with $\det M = 1$, as
 the objective function scales with the determinant of $M$.
 
 \section{Metric Learning Implementation and Results}
+\begin{figure}
+  \centering
+  \includegraphics[width=5in]{../trial_data_logs/hists.pdf}
+\end{figure}
 
 After using PCA to reduce our feature vectors to $n = 35$ components, we applied
 this method using 8-fold cross-validation to learn such a metric $d$. We used
@@ -231,12 +235,6 @@ conclude that there is a significant amount of information shared between $A$
 sections and $B$ sections, and the Mahalanobis metric we learned is able to
 identify some of the musical similarities.
 %TODO: caption and labels and resize
-\begin{figure}
-\begin{center}
-\includegraphics[width=2.5in]{../trial_data_logs/hists.pdf}
-\includegraphics[width=2.5in]{../trial_data_logs/pie.pdf}
-\end{center}
-\end{figure}
 
 \section{Composition}
 Now that we have shown the viability of our metric, we can use it to try to,
