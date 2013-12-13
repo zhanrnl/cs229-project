@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
 plt.figure()
-fig, sp = plt.subplots(2, sharex=True)
-fig.set_size_inches(7,10)
-plt.subplots_adjust(top=0.85,left=0.16)
+fig, sp = plt.subplots(1, 2, sharey=True)
+fig.set_size_inches(11,4)
+plt.subplots_adjust(top=0.85,left=0.08)
 
 cmap = plt.get_cmap('YlGn')
 def to_percent(y, pos):
@@ -25,13 +25,14 @@ for i, matchdir in enumerate(["atob", "btoa"]):
         line.set_linewidth(1)
   sp[i].yaxis.set_major_formatter(FuncFormatter(to_percent))
   sp[i].grid(True)
-  sp[i].set_ylabel("Percentage with rank")
+  sp[i].set_xlim((0,20))
+  sp[i].set_xlabel("Rank of correct matching section in nearest neighbor list")
 
+sp[0].set_ylabel("Percentage with rank")
 sp[0].set_title("Matching A sections to given B sections")
 sp[1].set_title("Matching B sections to given A sections")
 
 sp[0].legend(loc='lower right', prop={'size':10})
-plt.xlabel("Rank of correct matching section in nearest neighbor list")
 
 plt.xlim((0,20))
 #plt.suptitle("Cumulative histograms of rank of correct\nmatching sections", fontsize=20)

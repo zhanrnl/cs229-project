@@ -52,7 +52,7 @@ to, given an $A$ section, automatically generate a musically appropriate $B$
 section.
 
 \begin{figure}
-  \centering \includegraphics[width=5in]{original_tune-crop.pdf}
+  \centering \includegraphics[width=4in]{original_tune-crop.pdf}
   \caption{
     ``Cooley's (reel)'', an example of a traditional Irish tune from The
     Session \cite{thesession}. This reel has the standard form of an 8-bar $A$
@@ -119,7 +119,7 @@ SVM, we used the relevant Scikit-learn libraries \cite{sklearn}.
 %section of the paper.
 
 \begin{figure}
-  \centering \includegraphics[width=5in]{../svm_results/svm.pdf}
+  \centering \includegraphics[width=4in]{../svm_results/svm.pdf}
   \caption{
     Accuracy of running our SVM classifier to classify musical phrases as either
     $A$ or $B$ sections. The performance on the testing dataset with various
@@ -209,8 +209,17 @@ the objective function scales with the determinant of $M$.
 
 \section{Metric Learning Implementation and Results}
 \begin{figure}
-  \centering
-  \includegraphics[width=5in]{../trial_data_logs/hists.pdf}
+  \includegraphics[width=5.8in]{../trial_data_logs/hists.pdf}
+  \caption{
+    Results of metric learning-based matching algorithm, showing the percentage
+    of tune sections whose matching other section appeared at a given rank in a
+    ranked list of nearest neighbors by the learned metric. For example, the
+    first column in the left chart represents the percentage of $B$ sections
+    whose matching $A$ section was the very closest by the metric out of all
+    possible other $A$ sections. Here the full feature vector with rhythm
+    information gave by far the best performance.
+  }
+  \label{hists}
 \end{figure}
 
 After using PCA to reduce our feature vectors to $n = 35$ components, we applied
@@ -225,8 +234,9 @@ the actual corresponding $B$ section. Ideally, the actual $B$ section would be
 the first element of this list, closest to this $A$ section. Alternatively, we
 could match an $A$ section to a given $B$ section.
 \end{itemize}
-We made a cumulative histogram of the ranks of the actual sections.%TODO: See Figure
-We also broke down the frequency of these ranks into a pie chart. %TODO: Fig
+%We made a cumulative histogram of the ranks of the actual sections.%TODO: See Figure
+%We also broke down the frequency of these ranks into a pie chart. %TODO: Fig
+See \cref{hists} for a cumulative histogram of our results.
 If we were to randomly guess the closest $B$ section, we would expect the rank
 of the correct $B$ section to be 1 with probability 0.1\%. In our results, the
 correct $B$ section was the first ranking option 37\% of the time. Moreover, the
@@ -255,8 +265,19 @@ simple algorithm:
 $\displaystyle{b_{cur} := \arg \min_{b_i} \  d(b_i, A)}$.
 \end{itemize}
 \end{enumerate}
-As an example, we tried to compose a new $B$ section for the $A$ section of the
-tune Cooley's Reel. %TODO (Lennart) Add music and figure.
+As an example, we tried to compose a new $B$ section for the $A$ section of
+Cooley's reel, the original correct version of which can be seen in
+\cref{origtune}. Our new created $B$ section can be seen in \cref{newb}. %TODO
+(Lennart) Add music and figure.
+\begin{figure}
+  \centering
+  \includegraphics[width=4in]{new_b-crop.pdf}
+  \caption{
+    A new $B$ section composed for Cooley's (see \cref{origtune}), using its distance
+    by the learned metric to the original $A$ section.
+  }
+  \label{newb}
+\end{figure}
 
 While the resulting $B$ section is musically far from ideal, it is notably
 better than the random starting $B$ section. For example, the starting note is
