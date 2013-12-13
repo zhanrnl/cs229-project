@@ -28,14 +28,14 @@ date = #(strftime "%B %e, %Y" (localtime (current-time)))
       e b b4 g'8 e d b
       a4 fs8 a d, a' fs a
       a4 fs8 a d e fs g
-      e b b4 e8 b g b
+      e b b4 e8 b g' b,
       e b b4 d8 e fs g
       a fs e cs d b a fs
       d e fs d e4 \bar ":|"
     }
-  \header {
-    piece = "An example of a tune from TheSession."
-  }
+  %\header {
+    %piece = "An example of a tune from TheSession."
+  %}
   \layout { \context { \Score \override SpacingSpanner
   #'common-shortest-duration = #(ly:make-moment 1 6) } }
 }
@@ -47,13 +47,13 @@ date = #(strftime "%B %e, %Y" (localtime (current-time)))
       \override #'(baseline-skip . 4)
       \column {
         \huge \larger \bold
-        \fill-line {
-          \larger \fromproperty #'header:title
-        }
-        \fill-line {
-          \large \smaller \bold
-          \larger \fromproperty #'header:subtitle
-        }
+        %\fill-line {
+          %\larger \fromproperty #'header:title
+        %}
+        %\fill-line {
+          %\large \smaller \bold
+          %\larger \fromproperty #'header:subtitle
+        %}
         \fill-line { \null }
       }
     }
