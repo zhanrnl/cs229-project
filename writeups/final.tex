@@ -33,7 +33,7 @@
 \nipsfinalcopy % Uncomment for camera-ready version
 
 \begin{document}
-
+\suppressfloats
 \maketitle
 
 \section{Introduction}
@@ -42,13 +42,28 @@ begins with one musical theme which is usually repeated, then progresses to
 another theme with similar musical structure and motives, which is usually also
 repeated. The first section is typically called the $A$ section while the second
 is called the $B$ section. Our goal is to understand, at a quantitative level,
-the relationship between $A$ sections and $B$ sections.
+the relationship between $A$ sections and $B$ sections. See \cref{origtune} for
+an example.
 
 In working towards this goal, we need to understand both the relationship
 between the $A$ and $B$ sections of a given folk song as well as the differences
 between $A$ and $B$ sections of such music in general. In the long term we wish
 to, given an $A$ section, automatically generate a musically appropriate $B$
 section.
+
+\begin{figure}
+  \centering \includegraphics[width=5in]{original_tune-crop.pdf}
+  \caption{
+    ``Cooley's (reel)'', an example of a traditional Irish tune from The
+    Session \cite{thesession}. This reel has the standard form of an 8-bar $A$
+    section which is repeated, then an 8-bar $B$ section which is also repeated.
+    The sections are labeled in the notation above. Notice how the $A$ and $B$
+    sections contain distinct melodic lines, but still have musical similarity.
+    For example, they end with the same $2 \frac 1 2$ bar
+    ascending-then-descending motif.
+  }
+  \label{origtune}
+\end{figure}
 
 \section{Dataset}
 
