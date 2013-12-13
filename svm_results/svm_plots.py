@@ -10,7 +10,7 @@ cmap = plt.get_cmap('YlGn')
 def to_percent(y, pos):
   return str(int(100*y)) + "%"
 
-num_features = [5, 10, 20, 30, 40]
+num_features = [5, 10, 20, 30, 40, 50, 60]
 fvec_type = ["", "norhythm_", "nobar_"]
 fvec_label = ["Full feature vector", "No rhythm data", "No bar-by-bar differentiation"]
 def str_to_arr(s):
