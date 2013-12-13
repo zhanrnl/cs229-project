@@ -33,7 +33,7 @@
 \nipsfinalcopy % Uncomment for camera-ready version
 
 \begin{document}
-
+\suppressfloats
 \maketitle
 
 \section{Introduction}
@@ -42,13 +42,28 @@ begins with one musical theme which is usually repeated, then progresses to
 another theme with similar musical structure and motives, which is usually also
 repeated. The first section is typically called the $A$ section while the second
 is called the $B$ section. Our goal is to understand, at a quantitative level,
-the relationship between $A$ sections and $B$ sections.
+the relationship between $A$ sections and $B$ sections. See \cref{origtune} for
+an example.
 
 In working towards this goal, we need to understand both the relationship
 between the $A$ and $B$ sections of a given folk song as well as the differences
 between $A$ and $B$ sections of such music in general. In the long term we wish
 to, given an $A$ section, automatically generate a musically appropriate $B$
 section.
+
+\begin{figure}
+  \centering \includegraphics[width=5in]{original_tune-crop.pdf}
+  \caption{
+    ``Cooley's (reel)'', an example of a traditional Irish tune from The
+    Session \cite{thesession}. This reel has the standard form of an 8-bar $A$
+    section which is repeated, then an 8-bar $B$ section which is also repeated.
+    The sections are labeled in the notation above. Notice how the $A$ and $B$
+    sections contain distinct melodic lines, but still have musical similarity.
+    For example, they end with the same $2 \frac 1 2$ bar
+    ascending-then-descending motif.
+  }
+  \label{origtune}
+\end{figure}
 
 \section{Dataset}
 
@@ -62,11 +77,12 @@ ABC files are easily parsed and manipulated symbolically for feature extraction.
 
 \section{Feature Extraction}
 
-First we select from our dataset tunes which have an $A$ and a $B$ section. We
-consider only tunes with a number of bars in $\{16, 32, 64\}$: an individual $A$
-or $B$ section usually has 8 or 16 measures, or 16 or 32 after unrolling repeat
-signs. We want to restrict to tunes that split evenly into two sections (e.g.
-not three sections, which could mean $ABC$, $ABA$, etc.).
+First we select from our dataset tunes which have the standard form of an $A$
+and a $B$ section. We consider only tunes with a number of bars in $\{16, 32,
+64\}$: an individual $A$ or $B$ section usually has 8 or 16 measures, or 16 or
+32 after manually reduplicating out music that was contained in repeat signs. We
+want to restrict to tunes that split evenly into two sections (e.g.  not three
+sections, which could mean $ABC$, $ABA$, etc.).
 
 After splitting tunes into $A$ and $B$ sections, we turn our attention to
 feature extraction.  Our dataset is loosely in the form of sequences of pitches
@@ -75,7 +91,7 @@ generate a feature vector of fixed length.
 
 We define an $n$-gram as an ordered list of (in our case) $n$ pitches of notes
 in a melody, ignoring accidentals. In total, we created three different feature
-vectors.
+vector designs.
 \begin{enumerate}
 %TODO: consider using nouns instead of verbs.
 \item Record counts of all 1- and 2-grams.
@@ -83,7 +99,8 @@ vectors.
 \item Split melodies by measure into eighths and store counts of all 1- and
 2-grams separately for each measure.
 
-\item Use the features from (2), also adding counts of notes of each length.
+\item Use the features from (2), also adding counts of notes of particular
+  rhythmic length.
 \end{enumerate}
 
 Since these feature vectors have nearly 2,000 components, before further
@@ -102,15 +119,46 @@ SVM, we used the relevant Scikit-learn libraries \cite{sklearn}.
 %section of the paper.
 
 \begin{figure}
-\includegraphics[width=5in]{../svm_results/svm.pdf}
-%TODO: Add caption
-%TODO: Add labels
+  \centering \includegraphics[width=5in]{../svm_results/svm.pdf}
+  \caption{
+    Accuracy of running our SVM classifier to classify musical phrases as either
+    $A$ or $B$ sections. The performance on the testing dataset with various
+    feature vector designs is shown with solid lines, and the performance on the
+    original training set is shown in dotted lines.
+  }
+  \label{svmfig}
 \end{figure}
 
-Observe that when we use the more complex feature vectors, training performance
-improves, but test performance suffers. We attribute this to overfitting;
-namely, as our feature vectors become more descriptive, the SVM identifies
-particular patterns present only in the training data.
+Our SVM classification results are presented in \cref{svmfig}. For all three
+feature vector designs, performance on the test set generally improved when we
+kept a greater number of features when running PCA on the data. Accuracy on
+the training sets was much better than the testing sets---probably, this is due
+to overfitting the SVM to the particular training sets in each case. Even in the
+cases where we kept a high number of features, there is always a sizeable gap in
+performance on the testing set compared to the training set.
+
+The feature vector design that gave us the least difference between training and
+testing performance (so probably represents the feature vector design with the
+least overfitting) is the ``no rhythm data'' feature vector, that contains
+pitch $n$-gram counts specific to each bar of the tune but not overall counts of
+notes with particular rhythmic values. Interestingly, the full feature vector
+with rhythm information caused the SVM classifier to perform worse. We believe
+this is because the corresponding $A$ and $B$ sections of most tunes may have
+different melodic figures, but if they are to have reasonable stylistic
+similarity they are likely to have similar rhythm value counts (for example, a
+reel whose $A$ section is mostly eighth notes is likely to have a $B$ section
+which contains mostly eighth notes). Meanwhile, having bar-by-bar
+differentiation of features understandably greatly improved performance---we
+believe this is a consequence of how in many tunes, the last bars of the $A$ and
+$B$ sections contain nearly the same notes. Thus our SVM might have learned to
+give greater weighting to the musical features of earlier bars, which are likely
+to be distinctive to $A$ and $B$ sections.
+
+%Observe that when
+%we use the more complex feature vectors, training performance improves, but test
+%performance suffers. We attribute this to overfitting; namely, as our feature
+%vectors become more descriptive, the SVM identifies particular patterns present
+%only in the training data.
 
 \section{Metric Learning Problem Formulation}
 We also want to learn what makes the $A$ and $B$ sections of a particular tune
@@ -180,7 +228,8 @@ of the correct $B$ section to be 1 with probability 0.1\%. In our results, the
 correct $B$ section was the first ranking option 37\% of the time. Moreover, the
 correct $B$ section was in the top 10\% of the ranking 93\% of the time. We
 conclude that there is a significant amount of information shared between $A$
-sections and $B$ sections.
+sections and $B$ sections, and the Mahalanobis metric we learned is able to
+identify some of the musical similarities.
 %TODO: caption and labels and resize
 \begin{figure}
 \begin{center}

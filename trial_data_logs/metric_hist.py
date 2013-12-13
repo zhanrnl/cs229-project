@@ -34,6 +34,6 @@ sp[0].legend(loc='lower right', prop={'size':10})
 plt.xlabel("Rank of correct matching section in nearest neighbor list")
 
 plt.xlim((0,20))
-plt.suptitle("Cumulative histograms of rank of correct\nmatching sections", fontsize=20)
+#plt.suptitle("Cumulative histograms of rank of correct\nmatching sections", fontsize=20)
 
 plt.savefig("hists.pdf")

@@ -50,6 +50,6 @@ for i, p in enumerate(patches):
   p.set_edgecolor('#103010')
 plt.text(0.52, 0.1, "matched perfectly", color='w', fontsize=16,
     horizontalalignment='center')
-plt.suptitle("Rank of correct matching A section\nto given B section in nearest neighbors", fontsize=24)
-plt.title("using learned metric on full data set of 8942 tunes", fontsize=16)
+#plt.suptitle("Rank of correct matching A section\nto given B section in nearest neighbors", fontsize=24)
+#plt.title("using learned metric on full data set of 8942 tunes", fontsize=16)
 plt.savefig("pie.pdf")
