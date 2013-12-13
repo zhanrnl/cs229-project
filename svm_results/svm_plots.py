@@ -10,20 +10,17 @@ cmap = plt.get_cmap('YlGn')
 def to_percent(y, pos):
   return str(int(100*y)) + "%"
 
-num_features = [5, 10, 20, 30, 40, 60]
-fvec_type = ["", "nobar_", "norhythm_"]
+num_features = [5, 10, 20, 30, 40]
+fvec_type = ["", "norhythm_", "nobar_"]
 fvec_label = ["Full feature vector", "No rhythm data", "No bar-by-bar differentiation"]
 def str_to_arr(s):
-  arrs = [ss.strip(' ').replace('[','').replace(']','').split(' ') for ss in
-      s.splitlines()]
-  arrs_nonempty = [[int(float(x)) for x in xs if len(x) > 0] for xs in arrs]
+  arrs = [ss.split(' ') for ss in s.splitlines()]
+  arrs_nonempty = [[int(x) for x in xs] for xs in arrs]
   return np.array(arrs_nonempty[:2]), np.array(arrs_nonempty[2:])
 def count_correct(arr):
   correct = arr[0,0] + arr[1,1]
   incorrect = arr[0,1] + arr[1,0]
   return correct, incorrect, correct + incorrect
-def to_percent(y, pos):
-  return str(int(100*y)) + "%"
 
 for i, (fvt, lab) in enumerate(zip(fvec_type, fvec_label)):
   #sp[0].set_ylim(0.55, 1.0)
