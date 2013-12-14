@@ -104,9 +104,8 @@ vector designs.
 \end{enumerate}
 
 Since these feature vectors have nearly 2,000 components, before further
-processing, we used PCA to reduce the number of components. This helped us
-understand, to some extent, the bias caused by overfitting (as we will see
-later), as well as made metric learning computationally more feasible.
+processing, we used PCA to reduce the number of components. This 
+helped make metric learning computationally more feasible.
 
 \section{SVM Classifier}
 Using our labeled pool of $A$ and $B$ sections, we used an SVM with Gaussian
@@ -114,9 +113,6 @@ kernel to attempt to classify a given segment of a tune as an $A$ section or a
 $B$ section. We used 8-fold cross-validation, and experimented with our three
 different feature vectors and various numbers of PCA components. To train the
 SVM, we used the relevant Scikit-learn libraries \cite{sklearn}.
-
-%TODO: (Lennart) Check the graph (re-run). You are responsible for updating this
-%section of the paper.
 
 \begin{figure}
   \centering \includegraphics[width=4in]{../svm_results/svm.pdf}
@@ -268,7 +264,6 @@ $\displaystyle{b_{cur} := \arg \min_{b_i} \  d(b_i, A)}$.
 As an example, we tried to compose a new $B$ section for the $A$ section of
 Cooley's reel, the original correct version of which can be seen in
 \cref{origtune}. Our new created $B$ section can be seen in \cref{newb}. %TODO
-(Lennart) Add music and figure.
 \begin{figure}
   \centering
   \includegraphics[width=4in]{new_b-crop.pdf}
@@ -307,7 +302,7 @@ learn from our set of tunes that smaller intervals between notes are much more
 likely than large ones. One other complicating issue is that when performing PCA
 to reduce our feature vectors to only have at most 35 features (as is necessary
 for the metric learning implementation), we may lose essential musical
-information that is necessary for a tune to see plausible to a human, as
+information that is necessary for a tune to seem plausible to a human, as
 features that are unrelated musically may be represented by a single
 principal component in the transformed dataset. We might find improvements to
 the composition process by using a metric or likelihood estimation that is able
