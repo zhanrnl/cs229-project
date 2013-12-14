@@ -304,10 +304,18 @@ tune is. We produce a sequence of pitches that is similar to the $A$ section
 but that, when viewed independently of this $A$ section, still seems musically
 ``unlikely.'' It is does not seem unreasonable, for example, that we could
 learn from our set of tunes that smaller intervals between notes are much more
-likely than large ones.
+likely than large ones. One other complicating issue is that when performing PCA
+to reduce our feature vectors to only have at most 35 features (as is necessary
+for the metric learning implementation), we may lose essential musical
+information that is necessary for a tune to see plausible to a human, as
+features that are unrelated musically may be represented by a single
+principal component in the transformed dataset. We might find improvements to
+the composition process by using a metric or likelihood estimation that is able
+to consider a larger number of features, or perhaps the untransformed original
+feature vectors themselves.
 
-In short, while we believe we have made significant progress, there is no
-shortage of future work to be done.
+%In short, while we believe we have made significant progress, there is no
+%shortage of future work to be done.
 
 %I gave up. We're using this instead of the BibTex database. (ED)
 %Format is "\bibitem{cite_key} bibliographic information ...."
